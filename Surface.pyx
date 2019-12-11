@@ -42,6 +42,27 @@ cdef class SurfaceBase:
         return
 
 
+cdef class SurfaceNone(SurfaceBase):
+    def __init__(self):
+        pass
+
+    cpdef initialize(self):
+        return
+    cpdef update(self, GridMeanVariables GMV, ):
+        cdef:
+            Py_ssize_t k, gw = self.Gr.gw
+        self.windspeed = 0.0001
+        self.zrough = 1e-4
+
+        # self.bflux = buoyancy_flux(self.shf, self.lhf, GMV.T.values[gw], GMV.QT.values[gw],self.Ref.alpha0[gw-1]  )
+        self.bflux = 1e-4
+        self.ustar = compute_ustar(self.windspeed, self.bflux, self.zrough, self.Gr.z_half[gw])
+
+        return
+    cpdef free_convection_windspeed(self, GridMeanVariables GMV):
+        return
+
+
 cdef class SurfaceFixedFlux(SurfaceBase):
     def __init__(self,paramlist):
         SurfaceBase.__init__(self, paramlist)
@@ -82,6 +103,9 @@ cdef class SurfaceFixedFlux(SurfaceBase):
 
             self.ustar = compute_ustar(self.windspeed, self.bflux, self.zrough, self.Gr.z_half[gw])
 
+        print self.ustar
+        print self.bflux
+        print vkb
         self.obukhov_length = -self.ustar *self.ustar *self.ustar /self.bflux /vkb
         self.rho_uflux = - self.Ref.rho0[gw-1] *  self.ustar * self.ustar / self.windspeed * GMV.U.values[gw]
         self.rho_vflux = - self.Ref.rho0[gw-1] *  self.ustar * self.ustar / self.windspeed * GMV.V.values[gw]
@@ -267,7 +291,7 @@ cdef class SurfaceMoninObukhovDry(SurfaceBase):
     cpdef free_convection_windspeed(self, GridMeanVariables GMV):
         SurfaceBase.free_convection_windspeed(self, GMV)
         return
-        
+
 # Not fully implemented yet. Maybe not needed - Ignacio
 cdef class SurfaceSullivanPatton(SurfaceBase):
     def __init__(self, paramlist):

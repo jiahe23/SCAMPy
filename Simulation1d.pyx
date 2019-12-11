@@ -29,7 +29,7 @@ class Simulation1d:
         self.Case.initialize_profiles(self.Gr, self.GMV, self.Ref)
         self.Case.initialize_surface(self.Gr, self.Ref )
         self.Case.initialize_forcing(self.Gr, self.Ref, self.GMV)
-        self.Turb.initialize(self.GMV)
+        self.Turb.initialize(self.Case, self.GMV)
         self.initialize_io()
         self.io()
 
@@ -37,6 +37,8 @@ class Simulation1d:
 
     def run(self):
         while self.TS.t <= self.TS.t_max:
+            print "================== now updating =================="
+            print "sim time: "+str(self.TS.t)
             self.GMV.zero_tendencies()
             self.Case.update_surface(self.GMV, self.TS)
             self.Case.update_forcing(self.GMV, self.TS)

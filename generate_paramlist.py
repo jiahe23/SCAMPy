@@ -82,6 +82,8 @@ def main():
         paramlist = GABLS(paramlist_defaults)
     elif case_name == 'SP':
         paramlist = SP(paramlist_defaults)
+    elif case_name == 'SaturatedBubble':
+        paramlist = SaturatedBubble(paramlist_defaults)
     else:
         print('Not a valid case name')
         exit()
@@ -165,6 +167,14 @@ def SP(paramlist_defaults):
     paramlist['meta']['casename'] = 'SP'
 
     return  paramlist
+
+def SaturatedBubble(paramlist_defaults):
+    paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['surface_area'] = 0.01
+    paramlist = copy.deepcopy(paramlist_defaults)
+    paramlist['meta']['casename'] = 'SaturatedBubble'
+
+    return  paramlist
+
 
 def write_file(paramlist):
 

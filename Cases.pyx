@@ -34,6 +34,8 @@ def CasesFactory(namelist, paramlist):
         return GABLS(paramlist)
     elif namelist['meta']['casename'] == 'SP':
         return SP(paramlist)
+    elif namelist['meta']['casename'] == 'SaturatedBubble':
+        return SaturatedBubble(paramlist)
 
     else:
         print('case not recognized')
@@ -1485,6 +1487,154 @@ cdef class SP(CasesBase):
 
     cpdef io(self, NetCDFIO_Stats Stats):
         CasesBase.io(self,Stats)
+        return
+
+    cpdef update_surface(self, GridMeanVariables GMV, TimeStepping TS):
+        self.Sur.update(GMV)
+        return
+
+    cpdef update_forcing(self, GridMeanVariables GMV, TimeStepping TS):
+        self.Fo.update(GMV)
+        return
+
+cdef class SaturatedBubble(CasesBase):
+    def __init__(self, paramlist):
+        self.casename = 'SaturatedBubble'
+        self.Sur = Surface.SurfaceNone()
+        self.Fo = Forcing.ForcingNone()
+        self.inversion_option = 'critical_Ri'
+        self.Fo.apply_coriolis = False
+        self.Fo.apply_subsidence = False
+        return
+
+    def theta_to_T(self, p0_, thetas_, qt_, qtg):
+        T1 = Tt
+        T2 = Tt + 1
+        pv1 = pv_star(T1)
+        pv2 = pv_star(T2)
+        qs1 = qv_star_c(p0_,qtg,pv1)
+        ql1 = np.max([0.0,qt_ - qs1])
+        L1 = latent_heat(T1)
+        f1 = thetas_ - thetas_t_c(p0_,T1,qt_,qt_-ql1,ql1,L1)
+        delta = np.abs(T1 - T2)
+        while delta >= 1e-12:
+            L2 = latent_heat(T2)
+            pv2 = pv_star(T2)
+            qs2 = qv_star_c(p0_,qtg, pv2)
+            ql2 = np.max([0.0,qt_ - qs2])
+            f2 = thetas_ - thetas_t_c(p0_,T2,qt_,qt_-ql2,ql2,L2)
+            Tnew = T2 - f2 * (T2 - T1)/(f2 - f1)
+            T1 = T2
+            T2 = Tnew
+            f1 = f2
+            delta = np.abs(T1 - T2)
+        return T2
+
+
+    cpdef initialize_reference(self, Grid Gr, ReferenceState Ref, NetCDFIO_Stats Stats):
+        Ref.Pg = 1.0e5  #Pressure at ground
+        Ref.qtg = 0.02
+        # theta_ref = 320 thruout the column, need to compute sfc_T
+        # function directly adopted from pycles initialization of SaturatedBubble
+        # TODO: check and merge with eos in thermodynamic_functions
+
+        Ref.Tg = self.theta_to_T(Ref.Pg,320.0,0.0196,Ref.qtg)
+        Ref.initialize(Gr, Stats)
+        return
+
+    cpdef initialize_profiles(self, Grid Gr, GridMeanVariables GMV, ReferenceState Ref ):
+
+        z_in = np.array([    25.,   75.,  125.,  175.,  225.,  275.,  325.,  375.,  425.,
+                            475.,  525.,  575.,  625.,  675.,  725.,  775.,  825.,  875.,
+                            925.,  975., 1025., 1075., 1125., 1175., 1225., 1275., 1325.,
+                           1375., 1425., 1475., 1525., 1575., 1625., 1675., 1725., 1775.,
+                           1825., 1875., 1925., 1975., 2025., 2075., 2125., 2175., 2225.,
+                           2275., 2325., 2375., 2425., 2475., 2525., 2575., 2625., 2675.,
+                           2725., 2775., 2825., 2875., 2925., 2975., 3025., 3075., 3125.,
+                           3175., 3225., 3275., 3325., 3375., 3425., 3475., 3525., 3575.,
+                           3625., 3675., 3725., 3775., 3825., 3875., 3925., 3975., 4025.,
+                           4075., 4125., 4175., 4225., 4275., 4325., 4375., 4425., 4475.,
+                           4525., 4575., 4625., 4675., 4725., 4775., 4825., 4875., 4925.,
+                           4975., 5025., 5075., 5125., 5175., 5225., 5275., 5325., 5375.,
+                           5425., 5475., 5525., 5575., 5625., 5675., 5725., 5775., 5825.,
+                           5875., 5925., 5975., 6025., 6075., 6125., 6175., 6225., 6275.,
+                           6325., 6375., 6425., 6475., 6525., 6575., 6625., 6675., 6725.,
+                           6775., 6825., 6875., 6925., 6975., 7025., 7075., 7125., 7175.,
+                           7225., 7275., 7325., 7375., 7425., 7475., 7525., 7575., 7625.,
+                           7675., 7725., 7775., 7825., 7875., 7925., 7975., 8025., 8075.,
+                           8125., 8175., 8225., 8275., 8325., 8375., 8425., 8475., 8525.,
+                           8575., 8625., 8675., 8725., 8775., 8825., 8875., 8925., 8975.,
+                           9025., 9075., 9125., 9175., 9225., 9275., 9325., 9375., 9425.,
+                           9475., 9525., 9575., 9625., 9675., 9725., 9775., 9825., 9875.,
+                           9925., 9975.])
+                           #LES z_half in meters
+
+        T_in = np.array([  297.21, 297.02, 296.83, 296.64, 296.45, 296.26, 296.07, 295.88,
+                           295.69, 295.49, 295.3 , 295.11, 294.92, 294.72, 294.53, 294.33,
+                           294.14, 293.95, 293.75, 293.55, 293.36, 293.16, 292.96, 292.77,
+                           292.57, 292.37, 292.17, 291.97, 291.77, 291.57, 291.37, 291.17,
+                           290.97, 290.76, 290.56, 290.36, 290.15, 289.95, 289.74, 289.54,
+                           289.33, 289.12, 288.92, 288.71, 288.5 , 288.29, 288.08, 287.87,
+                           287.66, 287.45, 287.23, 287.02, 286.81, 286.59, 286.38, 286.16,
+                           285.94, 285.73, 285.51, 285.29, 285.08, 284.86, 284.64, 284.42,
+                           284.2 , 283.98, 283.76, 283.54, 283.31, 283.09, 282.87, 282.65,
+                           282.43, 282.2 , 281.98, 281.75, 281.53, 281.3 , 281.08, 280.85,
+                           280.63, 280.4 , 280.17, 279.94, 279.72, 279.48, 279.26, 279.02,
+                           278.79, 278.56, 278.33, 278.09, 277.86, 277.63, 277.39, 277.15,
+                           276.92, 276.68, 276.44, 276.2 , 275.96, 275.72, 275.48, 275.24,
+                           275.  , 274.75, 274.51, 274.26, 274.02, 273.77, 273.52, 273.28,
+                           273.03, 272.78, 272.53, 272.27, 272.02, 271.77, 271.51, 271.26,
+                           271.  , 270.75, 270.49, 270.23, 269.97, 269.71, 269.45, 269.19,
+                           268.92, 268.66, 268.39, 268.13, 267.86, 267.59, 267.32, 267.05,
+                           266.78, 266.51, 266.23, 265.96, 265.68, 265.41, 265.13, 264.85,
+                           264.57, 264.29, 264.01, 263.73, 263.44, 263.16, 262.87, 262.58,
+                           262.29, 262.  , 261.71, 261.42, 261.12, 260.83, 260.53, 260.24,
+                           259.94, 259.64, 259.34, 259.03, 258.73, 258.42, 258.12, 257.81,
+                           257.5 , 257.19, 256.88, 256.57, 256.25, 255.94, 255.62, 255.3 ,
+                           254.98, 254.66, 254.34, 254.01, 253.69, 253.36, 253.03, 252.7 ,
+                           252.37, 252.04, 251.71, 251.37, 251.04, 250.7 , 250.36, 250.02,
+                           249.68, 249.33, 248.99, 248.64, 248.29, 247.94, 247.59, 247.24])
+                           #LES temperature_mean in K
+        T = np.zeros(Gr.nzg)
+        T[Gr.gw:Gr.nzg-Gr.gw] = np.interp(Gr.z_half[Gr.gw:Gr.nzg-Gr.gw],z_in,T_in)
+        GMV.T.values = T
+        GMV.T.set_bcs(Gr)
+
+        for k in xrange(Gr.gw,Gr.nzg-Gr.gw):
+            GMV.QT.values[k] = 0.0196
+            if GMV.H.name == 's':
+                GMV.H.values[k] = t_to_entropy_c(Ref.p0_half[k],GMV.T.values[k],
+                                                GMV.QT.values[k], 0.0, 0.0)
+            elif GMV.H.name == 'thetal':
+                 GMV.H.values[k] = thetali_c(Ref.p0_half[k],GMV.T.values[k],
+                                                GMV.QT.values[k], 0.0, 0.0, latent_heat(GMV.T.values[k]))
+            GMV.THL.values[k] = thetali_c(Ref.p0_half[k],GMV.T.values[k],
+                                            GMV.QT.values[k], 0.0, 0.0, latent_heat(GMV.T.values[k]))
+        GMV.QT.set_bcs(Gr)
+        GMV.H.set_bcs(Gr)
+        GMV.satadjust()
+        return
+
+    cpdef initialize_surface(self, Grid Gr,  ReferenceState Ref ):
+        self.Sur.Gr = Gr
+        self.Sur.Ref = Ref
+        self.Sur.qsurface = 0.0196
+        self.Sur.shf = 8.0e-3 * cpm_c(self.Sur.qsurface) * Ref.rho0[Gr.gw-1]
+        self.Sur.initialize()
+        return
+
+    cpdef initialize_forcing(self, Grid Gr,  ReferenceState Ref, GridMeanVariables GMV ):
+        self.Fo.Gr = Gr
+        self.Fo.Ref = Ref
+        self.Fo.initialize(GMV)
+        return
+
+    cpdef initialize_io(self, NetCDFIO_Stats Stats):
+        CasesBase.initialize_io(self, Stats)
+        return
+
+    cpdef io(self, NetCDFIO_Stats Stats):
+        CasesBase.io(self, Stats)
         return
 
     cpdef update_surface(self, GridMeanVariables GMV, TimeStepping TS):

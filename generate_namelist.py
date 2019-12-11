@@ -79,6 +79,8 @@ def main():
         namelist = GABLS(namelist_defaults)
     elif case_name == 'SP':
         namelist = SP(namelist_defaults)
+    elif case_name == 'SaturatedBubble':
+        namelist = SaturatedBubble(namelist_defaults)
     else:
         print('Not a valid case name')
         exit()
@@ -236,6 +238,20 @@ def SP(namelist_defaults):
     namelist['time_stepping']['t_max'] = 7200.0
     namelist['meta']['simname'] = 'SP'
     namelist['meta']['casename'] = 'SP'
+
+    return namelist
+
+def SaturatedBubble(namelist_defaults):
+
+    namelist = copy.deepcopy(namelist_defaults)
+
+    namelist['grid']['nz'] = 50
+    namelist['grid']['dz'] = 200.0
+
+    namelist['time_stepping']['dt'] = 10.0
+    namelist['time_stepping']['t_max'] = 1000.0
+    namelist['meta']['simname'] = 'SaturatedBubble'
+    namelist['meta']['casename'] = 'SaturatedBubble'
 
     return namelist
 

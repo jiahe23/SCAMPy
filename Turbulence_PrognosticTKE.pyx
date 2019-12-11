@@ -273,8 +273,11 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
         self.b = np.zeros((Gr.nzg,),dtype=np.double, order='c')
         return
 
-    cpdef initialize(self, GridMeanVariables GMV):
-        self.UpdVar.initialize(GMV)
+    cpdef initialize(self, CasesBase Case, GridMeanVariables GMV):
+        if Case.casename == 'SaturatedBubble':
+            self.UpdVar.initialize_bubble(GMV)
+        else:
+            self.UpdVar.initialize(GMV)
         return
 
     # Initialize the IO pertaining to this class
@@ -852,6 +855,9 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
                     l2 = vkb * z_ /(sqrt(self.EnvVar.TKE.values[self.Gr.gw]/ustar/ustar)*self.tke_ed_coeff) * fmin(
                      (1.0 - 100.0 * z_/obukhov_length)**0.2, 1.0/vkb )
                 else: # neutral or stable
+                    print "ustar: "+str(ustar)
+                    print "tke_ed_coeff: "+str(self.tke_ed_coeff)
+                    print "Env TKE: "+str(self.EnvVar.TKE.values[self.Gr.gw])
                     l2 = vkb * z_ /(sqrt(self.EnvVar.TKE.values[self.Gr.gw]/ustar/ustar)*self.tke_ed_coeff)
 
                 # Buoyancy-shear-subdomain exchange-dissipation TKE equilibrium scale

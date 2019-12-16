@@ -756,6 +756,9 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
             double m_eps = 1.0e-9 # Epsilon to avoid zero
             double a, c_neg, wc_upd_nn, wc_env
 
+        if self.EnvVar.TKE.values[self.Gr.gw]<1e-4:
+            self.EnvVar.TKE.values[self.Gr.gw] = 1e-4
+
         if (self.mixing_scheme == 'sbl'):
             for k in xrange(gw, self.Gr.nzg-gw):
                 z_ = self.Gr.z_half[k]

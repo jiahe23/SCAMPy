@@ -12,6 +12,8 @@ from Cases cimport  CasesBase
 from NetCDFIO cimport NetCDFIO_Stats
 cimport TimeStepping
 
+import matplotlib.pyplot as plt
+
 class Simulation1d:
 
     def __init__(self, namelist, paramlist):
@@ -37,7 +39,8 @@ class Simulation1d:
 
     def run(self):
         while self.TS.t <= self.TS.t_max:
-            print "================== now updating =================="
+            print self.TS.t
+            print "\n\n================== now updating =================="
             print "sim time: "+str(self.TS.t)
             self.GMV.zero_tendencies()
             self.Case.update_surface(self.GMV, self.TS)

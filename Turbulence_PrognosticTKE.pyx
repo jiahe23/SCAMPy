@@ -620,12 +620,12 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
             self.UpdThermo.buoyancy(self.UpdVar, self.EnvVar, GMV, self.extrapolate_buoyancy)
             self.set_subdomain_bcs()
 
-            print '---- upd b: '
-            print np.asarray(self.UpdVar.B.values[:,:8])
-            print '---- env b: '
-            print np.asarray(self.EnvVar.B.values[:8])
-            print '---- GMV b: '
-            print np.asarray(GMV.B.values[:8])
+            # print '---- upd b: '
+            # print np.asarray(self.UpdVar.B.values[:,:8])
+            # print '---- env b: '
+            # print np.asarray(self.EnvVar.B.values[:8])
+            # print '---- GMV b: '
+            # print np.asarray(GMV.B.values[:8])
 
         self.UpdThermo.update_total_precip_sources()
         return
@@ -1559,11 +1559,11 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
                         detr_w = interp2pt(self.detr_sc[i,k], self.detr_sc[i,k+1])
                         B_k = interp2pt(self.UpdVar.B.values[i,k], self.UpdVar.B.values[i,k+1])
 
-                        if k-gw<5:
-                            with gil:
-                                print '---- B[k_half]: ' + str(self.UpdVar.B.values[i,k])
-                                print '---- B[k+1 _half]: ' + str(self.UpdVar.B.values[i,k+1])
-                                print '---- B[k_full]: ' + str(B_k)
+                        # if k-gw<5:
+                        #     with gil:
+                        #         print '---- B[k_half]: ' + str(self.UpdVar.B.values[i,k])
+                        #         print '---- B[k+1 _half]: ' + str(self.UpdVar.B.values[i,k+1])
+                        #         print '---- B[k_full]: ' + str(B_k)
 
                         adv = (self.Ref.rho0[k] * a_k * self.UpdVar.W.values[i,k] * self.UpdVar.W.values[i,k] * dzi
                                - self.Ref.rho0[k-1] * a_km * self.UpdVar.W.values[i,k-1] * self.UpdVar.W.values[i,k-1] * dzi)
@@ -1573,16 +1573,16 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
                         self.UpdVar.W.new[i,k] = (self.Ref.rho0[k] * a_k * self.UpdVar.W.values[i,k] * dti_
                                                   -adv + exch + buoy + self.nh_pressure[i,k])/(self.Ref.rho0[k] * anew_k * dti_)
 
-                        if k-gw<5:
-                            with gil:
-                                print '-------- k: ' + str(k)
-                                print '-- adv w: ' + str(-adv)
-                                print '-- entr-detr w: ' + str(exch)
-                                print '-- buoy: ' + str(buoy)
-                                print '-- press: ' + str(self.nh_pressure[i,k])
-                                print '-- tdc: ' + str((-adv + exch + buoy + self.nh_pressure[i,k])/(self.Ref.rho0[k] * anew_k * dti_))
-                                print '-- weighted old: ' + str(a_k * self.UpdVar.W.values[i,k]/anew_k)
-                                print '-- new w: ' + str(self.UpdVar.W.new[i,k])
+                        # if k-gw<5:
+                        #     with gil:
+                        #         print '-------- k: ' + str(k)
+                        #         print '-- adv w: ' + str(-adv)
+                        #         print '-- entr-detr w: ' + str(exch)
+                        #         print '-- buoy: ' + str(buoy)
+                        #         print '-- press: ' + str(self.nh_pressure[i,k])
+                        #         print '-- tdc: ' + str((-adv + exch + buoy + self.nh_pressure[i,k])/(self.Ref.rho0[k] * anew_k * dti_))
+                        #         print '-- weighted old: ' + str(a_k * self.UpdVar.W.values[i,k]/anew_k)
+                        #         print '-- new w: ' + str(self.UpdVar.W.new[i,k])
 
                         if self.UpdVar.W.new[i,k] <= 0.0:
                             self.UpdVar.W.new[i,k] = 0.0

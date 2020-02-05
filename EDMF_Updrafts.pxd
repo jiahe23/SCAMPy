@@ -5,6 +5,7 @@ from NetCDFIO cimport NetCDFIO_Stats
 from EDMF_Environment cimport EnvironmentVariables
 from EDMF_Rain cimport RainVariables
 
+
 cdef class UpdraftVariable:
     cdef:
         double [:,:] values
@@ -46,7 +47,7 @@ cdef class UpdraftVariables:
         double lwp
 
     cpdef initialize(self, GridMeanVariables GMV)
-    cpdef initialize_bubble(self, GridMeanVariables GMV)
+    cpdef initialize_bubble(self, GridMeanVariables GMV, ReferenceState.ReferenceState Ref)
     cpdef initialize_io(self, NetCDFIO_Stats Stats)
     cpdef io(self, NetCDFIO_Stats Stats, ReferenceState.ReferenceState Ref)
     cpdef set_means(self, GridMeanVariables GMV)

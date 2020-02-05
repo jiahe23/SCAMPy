@@ -275,9 +275,9 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
         self.b = np.zeros((Gr.nzg,),dtype=np.double, order='c')
         return
 
-    cpdef initialize(self, CasesBase Case, GridMeanVariables GMV):
+    cpdef initialize(self, CasesBase Case, GridMeanVariables GMV, ReferenceState Ref):
         if Case.casename == 'SaturatedBubble':
-            self.UpdVar.initialize_bubble(GMV)
+            self.UpdVar.initialize_bubble(GMV, Ref)
         else:
             self.UpdVar.initialize(GMV)
         return
@@ -515,15 +515,30 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
         self.wstar = get_wstar(Case.Sur.bflux, self.zi)
         if TS.nstep == 0:
 
-            for k in np.arange(1, 31):
+            print 'nstep == 0'
+            print np.asarray( self.UpdVar.Area.values )
+
+            for k in np.arange(self.Gr.gw, 11):
+                print 'k: '+str(k)
                 print 'upd b: '+str(self.UpdVar.B.values[0,k])
                 print 'env b: '+str(self.EnvVar.B.values[k])
                 print 'gm b: '+str(GMV.B.values[k])
+                print '\n'
 
             self.decompose_environment(GMV, 'values')
-            self.EnvThermo.microphysics(self.EnvVar, self.Rain, TS.dt)
-            self.UpdThermo.buoyancy(self.UpdVar, self.EnvVar, GMV, self.extrapolate_buoyancy)
+            # self.EnvThermo.microphysics(self.EnvVar, self.Rain, TS.dt)
+            # self.UpdThermo.buoyancy(self.UpdVar, self.EnvVar, GMV, self.extrapolate_buoyancy)
             self.initialize_covariance(GMV, Case)
+
+            print '===================='
+            print 'after decompose env'
+            print '===================='
+            for k in np.arange(self.Gr.gw, 11):
+                print 'upd b: '+str(self.UpdVar.B.values[0,k])
+                print 'env b: '+str(self.EnvVar.B.values[k])
+                print 'gm b: '+str(GMV.B.values[k])
+                print 'area weighted b: '+str(self.UpdVar.B.values[0,k]*self.UpdVar.Area.values[0,k]+self.EnvVar.B.values[k]*self.EnvVar.Area.values[k])
+                print '\n'
 
             with nogil:
                 for k in xrange(self.Gr.nzg):
@@ -533,6 +548,7 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
                         self.EnvVar.Hvar.values[k] = GMV.Hvar.values[k]
                         self.EnvVar.QTvar.values[k] = GMV.QTvar.values[k]
                         self.EnvVar.HQTcov.values[k] = GMV.HQTcov.values[k]
+        print 'after update initialize'
         self.decompose_environment(GMV, 'values')
         if self.use_steady_updrafts:
             self.compute_diagnostic_updrafts(GMV, Case)
@@ -582,6 +598,18 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
         # Back out the tendencies of the grid mean variables for the whole timestep
         # by differencing GMV.new and GMV.values
         ParameterizationBase.update(self, GMV, Case, TS)
+
+        # print '\n'
+        # print '===================='
+        # print 'after 1 time step update'
+        # print '===================='
+        # for k in np.arange(1, 31):
+        #     print 'upd b: '+str(self.UpdVar.B.values[0,k])
+        #     print 'env b: '+str(self.EnvVar.B.values[k])
+        #     print 'gm b: '+str(GMV.B.values[k])
+        #     print 'area weighted ave b: '+str(self.UpdVar.B.values[0,k]*self.UpdVar.Area.values[0,k]+self.EnvVar.B.values[k]*self.EnvVar.Area.values[k])
+        #     print '\n'
+
         return
 
     cpdef compute_prognostic_updrafts(self, GridMeanVariables GMV, CasesBase Case, TimeStepping TS):

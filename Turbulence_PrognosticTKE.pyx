@@ -514,8 +514,15 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
         self.compute_pressure_plume_spacing(GMV, Case)
         self.wstar = get_wstar(Case.Sur.bflux, self.zi)
         if TS.nstep == 0:
+
+            for k in np.arange(1, 31):
+                print 'upd b: '+str(self.UpdVar.B.values[0,k])
+                print 'env b: '+str(self.EnvVar.B.values[k])
+                print 'gm b: '+str(GMV.B.values[k])
+
             self.decompose_environment(GMV, 'values')
             self.EnvThermo.microphysics(self.EnvVar, self.Rain, TS.dt)
+            self.UpdThermo.buoyancy(self.UpdVar, self.EnvVar, GMV, self.extrapolate_buoyancy)
             self.initialize_covariance(GMV, Case)
 
             with nogil:
@@ -593,11 +600,6 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
         self.UpdThermo.clear_precip_sources()
 
         while time_elapsed < TS.dt:
-            print '==========dt_upd: '+str(self.dt_upd)
-            # print 'current area fraction: '
-            # for i in xrange(self.n_updrafts):
-            #     print np.asarray(self.UpdVar.Area.values[i,:])
-
             self.compute_entrainment_detrainment(GMV, Case)
             if self.turbulent_entrainment_factor > 1.0e-6:
                 self.compute_horizontal_eddy_diffusivities(GMV)
@@ -619,13 +621,6 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
             self.EnvThermo.saturation_adjustment(self.EnvVar)
             self.UpdThermo.buoyancy(self.UpdVar, self.EnvVar, GMV, self.extrapolate_buoyancy)
             self.set_subdomain_bcs()
-
-            # print '---- upd b: '
-            # print np.asarray(self.UpdVar.B.values[:,:8])
-            # print '---- env b: '
-            # print np.asarray(self.EnvVar.B.values[:8])
-            # print '---- GMV b: '
-            # print np.asarray(GMV.B.values[:8])
 
         self.UpdThermo.update_total_precip_sources()
         return
@@ -1529,17 +1524,6 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
 
                     self.UpdVar.Area.new[i,k+1]  = fmax(dt_ * (adv + entr_term + detr_term) + self.UpdVar.Area.values[i,k+1], 0.0)
 
-                    # if k-gw<5:
-                    #     with gil:
-                    #         print '-------- k: ' + str(k)
-                    #         print '-- adv: ' + str(adv)
-                    #         print '-- entr: ' + str(entr_term)
-                    #         print '-- detr: ' + str(detr_term)
-                    #         print '-- old area: ' + str(self.UpdVar.Area.values[i,k+1])
-                    #         print '-- tdc: ' + str(dt_ * (adv + entr_term + detr_term))
-                    #         print '-- new area: ' + str(dt_ * (adv + entr_term + detr_term) + self.UpdVar.Area.values[i,k+1])
-                    #         print '-- new fact: ' + str(self.UpdVar.Area.new[i,k+1])
-
                     if self.UpdVar.Area.new[i,k+1] > au_lim:
                         self.UpdVar.Area.new[i,k+1] = au_lim
                         if self.UpdVar.Area.values[i,k+1] > 0.0:
@@ -1559,12 +1543,6 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
                         detr_w = interp2pt(self.detr_sc[i,k], self.detr_sc[i,k+1])
                         B_k = interp2pt(self.UpdVar.B.values[i,k], self.UpdVar.B.values[i,k+1])
 
-                        # if k-gw<5:
-                        #     with gil:
-                        #         print '---- B[k_half]: ' + str(self.UpdVar.B.values[i,k])
-                        #         print '---- B[k+1 _half]: ' + str(self.UpdVar.B.values[i,k+1])
-                        #         print '---- B[k_full]: ' + str(B_k)
-
                         adv = (self.Ref.rho0[k] * a_k * self.UpdVar.W.values[i,k] * self.UpdVar.W.values[i,k] * dzi
                                - self.Ref.rho0[k-1] * a_km * self.UpdVar.W.values[i,k-1] * self.UpdVar.W.values[i,k-1] * dzi)
                         exch = (self.Ref.rho0[k] * a_k * self.UpdVar.W.values[i,k]
@@ -1573,18 +1551,18 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
                         self.UpdVar.W.new[i,k] = (self.Ref.rho0[k] * a_k * self.UpdVar.W.values[i,k] * dti_
                                                   -adv + exch + buoy + self.nh_pressure[i,k])/(self.Ref.rho0[k] * anew_k * dti_)
 
-                        # if k-gw<5:
-                        #     with gil:
-                        #         print '-------- k: ' + str(k)
-                        #         print '-- adv w: ' + str(-adv)
-                        #         print '-- entr-detr w: ' + str(exch)
-                        #         print '-- buoy: ' + str(buoy)
-                        #         print '-- press: ' + str(self.nh_pressure[i,k])
-                        #         print '-- tdc: ' + str((-adv + exch + buoy + self.nh_pressure[i,k])/(self.Ref.rho0[k] * anew_k * dti_))
-                        #         print '-- weighted old: ' + str(a_k * self.UpdVar.W.values[i,k]/anew_k)
-                        #         print '-- new w: ' + str(self.UpdVar.W.new[i,k])
-
                         if self.UpdVar.W.new[i,k] <= 0.0:
+                            # with gil:
+                            #     print 'k: '+str(k)
+                            #     print 'w_new: '+str(self.UpdVar.W.new[i,k])
+                            #     print 'adv: '+str(-adv)
+                            #     print 'exch: '+str(exch)
+                            #     print 'b: '+str(buoy)
+                            #     print 'press: '+str(self.nh_pressure[i,k])
+                            #     print 'source: '+str(adv+exch+buoy+self.nh_pressure[i,k])
+                            #
+                            #     print 'upd b: '+str(self.UpdVar.B.values[i,k])
+                            #     print 'env b: '+str(self.EnvVar.B.values[k])
                             self.UpdVar.W.new[i,k] = 0.0
                             self.UpdVar.Area.new[i,k+1] = 0.0
                             #break
@@ -1594,23 +1572,7 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
                         # keep this in mind if we modify updraft top treatment!
                         #break
 
-                with gil:
-                    print np.asarray(self.UpdVar.Area.new[i,gw+1:gw+1+5])
-                # with gil:
-                #     np.set_printoptions(precision=6)
-                #     print 'i: '+str(i)
-                #     print 'adv:'
-                #     print np.asarray(adv_[0:5])
-                #     print 'entr:'
-                #     print np.asarray(entr_term_[0:5])
-                #     print 'detr:'
-                #     print np.asarray(detr_term_[0:5])
-                #     print 'old value + tdc :'
-                #     print np.asarray(a_oldtdc_[0:5])
-                #     print 'old:'
-                #     print np.asarray(self.UpdVar.Area.values[i,:5])
-                #     print 'new:'
-                #     print np.asarray(self.UpdVar.Area.new[i,:5])
+
         return
 
     cpdef solve_updraft_scalars(self, GridMeanVariables GMV):

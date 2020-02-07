@@ -116,7 +116,6 @@ cdef class UpdraftVariables:
         with nogil:
             for i in xrange(self.n_updrafts):
                 for k in xrange(self.Gr.nzg):
-
                     self.W.values[i,k] = 0.0
                     # Simple treatment for now, revise when multiple updraft closures
                     # become more well defined
@@ -441,9 +440,43 @@ cdef class UpdraftVariables:
                     self.H.values[i,k] = np.interp(self.Gr.z_half[k+gw],z_in,thetal_in)
                     self.QL.values[i,k] = np.interp(self.Gr.z_half[k+gw],z_in,QL_in)
 
-                    qv = GMV.QT.values[k] - GMV.QL.values[k]
-                    alpha = alpha_c(Ref.p0_half[k], GMV.T.values[k], GMV.QT.values[k], qv)
-                    self.B.values[i,k] = buoyancy_c(Ref.alpha0_half[k], alpha)
+                    sa = eos(
+                        t_to_thetali_c,
+                        eos_first_guess_thetal,
+                        Ref.p0_half[k],
+                        self.QT.values[i,k],
+                        self.H.values[i,k]
+                    )
+                    self.QL.values[i,k] = sa.ql
+                    self.T.values[i,k] = sa.T
+
+        # # compute updraft buoyancy wrt reference state
+        # for i in xrange(self.n_updrafts):
+        #     for k in xrange(self.Gr.gw, self.Gr.nzg-self.Gr.gw):
+        #         if self.Area.values[i,k] > 0.0:
+        #             qt = self.QT.values[i,k]
+        #             qv = self.QT.values[i,k] - self.QL.values[i,k]
+        #             h = self.H.values[i,k]
+        #             t = self.T.values[i,k]
+        #             alpha = alpha_c(Ref.p0_half[k], t, qt, qv)
+        #             self.B.values[i,k] = buoyancy_c(Ref.alpha0_half[k], alpha)
+        #         elif self.Area.values[i,k-1] > 0.0 and k>self.Gr.gw:
+        #             sa = eos(t_to_thetali_c, eos_first_guess_thetal, Ref.p0_half[k], qt, h)
+        #             qt -= sa.ql
+        #             qv = qt
+        #             t = sa.T
+        #             alpha = alpha_c(Ref.p0_half[k], t, qt, qv)
+        #             self.B.values[i,k] = buoyancy_c(Ref.alpha0_half[k], alpha)
+        #         else:
+        #             self.B.values[i,k] = 0
+                    #
+                    # qt = self.QT.values[i,k]
+                    # qv = self.QT.values[i,k] - self.QL.values[i,k]
+                    # h = self.H.values[i,k]
+                    # sa = eos(t_to_thetali_c, eos_first_guess_thetal, Ref.p0_half[k], qt, h)
+                    # t = sa.T
+                    # alpha = alpha_c(Ref.p0_half[k], t, qt, qv)
+                    # self.B.values[i,k] = buoyancy_c(Ref.alpha0_half[k], alpha)
 
         self.QT.set_bcs(self.Gr)
         self.H.set_bcs(self.Gr)
@@ -668,7 +701,7 @@ cdef class UpdraftThermodynamics:
             double alpha, qv, qt, t, h
             Py_ssize_t gw = self.Gr.gw
 
-        print '-- upd thermo buoy --'
+        # print '-- upd thermo buoy --'
 
         UpdVar.Area.bulkvalues = np.sum(UpdVar.Area.values,axis=0)
 
@@ -703,17 +736,17 @@ cdef class UpdraftThermodynamics:
                             UpdVar.B.values[i,k] = buoyancy_c(self.Ref.alpha0_half[k], alpha)
                             UpdVar.RH.values[i,k] = relative_humidity_c(self.Ref.p0_half[k], qt, qt-qv, 0.0, t)
 
-                            if k < 5:
-                                with gil:
-                                    print 'k: ' + str(k)
-                                    print 'if choice'
-                                    print 'b: ' + str( UpdVar.B.values[i,k] )
+                            # if k < 5:
+                            #     with gil:
+                            #         print 'k: ' + str(k)
+                            #         print 'if choice'
+                            #         print 'b: ' + str( UpdVar.B.values[i,k] )
 
                         elif UpdVar.Area.values[i,k-1] > 0.0 and k>self.Gr.gw:
-                            if k < 5:
-                                with gil:
-                                    print 'k: ' + str(k)
-                                    print 'elif choice'
+                            # if k < 5:
+                            #     with gil:
+                            #         print 'k: ' + str(k)
+                            #         print 'elif choice'
                             sa = eos(self.t_to_prog_fp, self.prog_to_t_fp, self.Ref.p0_half[k],
                                      qt, h)
                             qt -= sa.ql

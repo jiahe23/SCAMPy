@@ -18,15 +18,15 @@ import matplotlib.pyplot as plt
 class Simulation1d:
 
     def __init__(self, namelist, paramlist):
-        try:
-            self.n_updrafts = namelist['turbulence']['EDMF_PrognosticTKE']['updraft_number']
-        except:
-            self.n_updrafts = 1
-            print('Turbulence--EDMF_PrognosticTKE: defaulting to single updraft')
+        # try:
+        #     self.n_updrafts = namelist['turbulence']['EDMF_PrognosticTKE']['updraft_number']
+        # except:
+        #     self.n_updrafts = 1
+        #     print('Turbulence--EDMF_PrognosticTKE: defaulting to single updraft')
         self.Gr = Grid.Grid(namelist)
         self.Ref = ReferenceState.ReferenceState(self.Gr)
         self.GMV = GridMeanVariables(namelist, self.Gr, self.Ref)
-        self.UpdVar = UpdraftVariables(self.n_updrafts, namelist, paramlist, self.Gr)
+        # self.UpdVar = UpdraftVariables(self.n_updrafts, namelist, paramlist, self.Gr)
         self.Case = CasesFactory(namelist, paramlist)
         self.Turb = ParameterizationFactory(namelist,paramlist, self.Gr, self.Ref)
         self.TS = TimeStepping.TimeStepping(namelist)
@@ -35,7 +35,7 @@ class Simulation1d:
 
     def initialize(self, namelist):
         self.Case.initialize_reference(self.Gr, self.Ref, self.Stats)
-        self.Case.initialize_profiles(self.Gr, self.GMV, self.Ref, self.UpdVar)
+        self.Case.initialize_profiles(self.Gr, self.GMV, self.Ref)
         self.Case.initialize_surface(self.Gr, self.Ref )
         self.Case.initialize_forcing(self.Gr, self.Ref, self.GMV)
         self.Turb.initialize(self.Case, self.GMV, self.Ref)

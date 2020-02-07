@@ -16,7 +16,7 @@ cdef class CasesBase:
         SurfaceBase Sur
         ForcingBase Fo
     cpdef initialize_reference(self, Grid Gr, ReferenceState Ref, NetCDFIO_Stats Stats)
-    cpdef initialize_profiles(self, Grid Gr, GridMeanVariables GMV, ReferenceState Ref, UpdraftVariables UpdVar)
+    cpdef initialize_profiles(self, Grid Gr, GridMeanVariables GMV, ReferenceState Ref)
     cpdef initialize_surface(self, Grid Gr,  ReferenceState Ref )
     cpdef initialize_forcing(self, Grid Gr,  ReferenceState Ref, GridMeanVariables GMV )
     cpdef initialize_io(self, NetCDFIO_Stats Stats)
@@ -26,7 +26,7 @@ cdef class CasesBase:
 
 cdef class Soares(CasesBase):
     cpdef initialize_reference(self, Grid Gr, ReferenceState Ref, NetCDFIO_Stats Stats)
-    cpdef initialize_profiles(self, Grid Gr, GridMeanVariables GMV, ReferenceState Ref, UpdraftVariables UpdVar)
+    cpdef initialize_profiles(self, Grid Gr, GridMeanVariables GMV, ReferenceState Ref)
     cpdef initialize_surface(self, Grid Gr,  ReferenceState Ref )
     cpdef initialize_forcing(self, Grid Gr,  ReferenceState Ref, GridMeanVariables GMV )
     cpdef initialize_io(self, NetCDFIO_Stats Stats)
@@ -36,7 +36,7 @@ cdef class Soares(CasesBase):
 
 cdef class Bomex(CasesBase):
     cpdef initialize_reference(self, Grid Gr, ReferenceState Ref, NetCDFIO_Stats Stats)
-    cpdef initialize_profiles(self, Grid Gr, GridMeanVariables GMV, ReferenceState Ref, UpdraftVariables UpdVar)
+    cpdef initialize_profiles(self, Grid Gr, GridMeanVariables GMV, ReferenceState Ref)
     cpdef initialize_surface(self, Grid Gr,  ReferenceState Ref )
     cpdef initialize_forcing(self, Grid Gr,  ReferenceState Ref, GridMeanVariables GMV )
     cpdef initialize_io(self, NetCDFIO_Stats Stats)
@@ -49,7 +49,7 @@ cdef class life_cycle_Tan2018(CasesBase):
         double shf0
         double lhf0
     cpdef initialize_reference(self, Grid Gr, ReferenceState Ref, NetCDFIO_Stats Stats)
-    cpdef initialize_profiles(self, Grid Gr, GridMeanVariables GMV, ReferenceState Ref, UpdraftVariables UpdVar)
+    cpdef initialize_profiles(self, Grid Gr, GridMeanVariables GMV, ReferenceState Ref)
     cpdef initialize_surface(self, Grid Gr,  ReferenceState Ref )
     cpdef initialize_forcing(self, Grid Gr,  ReferenceState Ref, GridMeanVariables GMV )
     cpdef initialize_io(self, NetCDFIO_Stats Stats)
@@ -60,7 +60,7 @@ cdef class life_cycle_Tan2018(CasesBase):
 
 cdef class Rico(CasesBase):
     cpdef initialize_reference(self, Grid Gr, ReferenceState Ref, NetCDFIO_Stats Stats)
-    cpdef initialize_profiles(self, Grid Gr, GridMeanVariables GMV, ReferenceState Ref, UpdraftVariables UpdVar)
+    cpdef initialize_profiles(self, Grid Gr, GridMeanVariables GMV, ReferenceState Ref)
     cpdef initialize_surface(self, Grid Gr,  ReferenceState Ref )
     cpdef initialize_forcing(self, Grid Gr, ReferenceState Ref, GridMeanVariables GMV)
     cpdef initialize_io(self, NetCDFIO_Stats Stats)
@@ -74,7 +74,7 @@ cdef class TRMM_LBA(CasesBase):
         double [:,:] rad
 
     cpdef initialize_reference(self, Grid Gr, ReferenceState Ref, NetCDFIO_Stats Stats)
-    cpdef initialize_profiles(self, Grid Gr, GridMeanVariables GMV, ReferenceState Ref, UpdraftVariables UpdVar)
+    cpdef initialize_profiles(self, Grid Gr, GridMeanVariables GMV, ReferenceState Ref)
     cpdef initialize_surface(self, Grid Gr,  ReferenceState Ref )
     cpdef initialize_forcing(self, Grid Gr, ReferenceState Ref, GridMeanVariables GMV)
     cpdef initialize_io(self, NetCDFIO_Stats Stats)
@@ -84,7 +84,7 @@ cdef class TRMM_LBA(CasesBase):
 
 cdef class ARM_SGP(CasesBase):
     cpdef initialize_reference(self, Grid Gr, ReferenceState Ref, NetCDFIO_Stats Stats)
-    cpdef initialize_profiles(self, Grid Gr, GridMeanVariables GMV, ReferenceState Ref, UpdraftVariables UpdVar)
+    cpdef initialize_profiles(self, Grid Gr, GridMeanVariables GMV, ReferenceState Ref)
     cpdef initialize_surface(self, Grid Gr,  ReferenceState Ref )
     cpdef initialize_forcing(self, Grid Gr, ReferenceState Ref, GridMeanVariables GMV)
     cpdef initialize_io(self, NetCDFIO_Stats Stats)
@@ -94,7 +94,7 @@ cdef class ARM_SGP(CasesBase):
 
 cdef class GATE_III(CasesBase):
     cpdef initialize_reference(self, Grid Gr, ReferenceState Ref, NetCDFIO_Stats Stats)
-    cpdef initialize_profiles(self, Grid Gr, GridMeanVariables GMV, ReferenceState Ref, UpdraftVariables UpdVar)
+    cpdef initialize_profiles(self, Grid Gr, GridMeanVariables GMV, ReferenceState Ref)
     cpdef initialize_surface(self, Grid Gr,  ReferenceState Ref )
     cpdef initialize_forcing(self, Grid Gr, ReferenceState Ref, GridMeanVariables GMV)
     cpdef initialize_io(self, NetCDFIO_Stats Stats)
@@ -104,7 +104,7 @@ cdef class GATE_III(CasesBase):
 
 cdef class DYCOMS_RF01(CasesBase):
     cpdef initialize_reference(self, Grid Gr, ReferenceState Ref, NetCDFIO_Stats Stats)
-    cpdef initialize_profiles(self, Grid Gr, GridMeanVariables GMV, ReferenceState Ref, UpdraftVariables UpdVar)
+    cpdef initialize_profiles(self, Grid Gr, GridMeanVariables GMV, ReferenceState Ref)
     cpdef initialize_surface(self, Grid Gr,  ReferenceState Ref )
     cpdef initialize_forcing(self, Grid Gr,  ReferenceState Ref, GridMeanVariables GMV )
     cpdef initialize_io(self, NetCDFIO_Stats Stats)
@@ -114,7 +114,7 @@ cdef class DYCOMS_RF01(CasesBase):
 
 cdef class GABLS(CasesBase):
     cpdef initialize_reference(self, Grid Gr, ReferenceState Ref, NetCDFIO_Stats Stats)
-    cpdef initialize_profiles(self, Grid Gr, GridMeanVariables GMV, ReferenceState Ref, UpdraftVariables UpdVar)
+    cpdef initialize_profiles(self, Grid Gr, GridMeanVariables GMV, ReferenceState Ref)
     cpdef initialize_surface(self, Grid Gr,  ReferenceState Ref )
     cpdef initialize_forcing(self, Grid Gr,  ReferenceState Ref, GridMeanVariables GMV )
     cpdef initialize_io(self, NetCDFIO_Stats Stats)
@@ -125,7 +125,7 @@ cdef class GABLS(CasesBase):
 # Still not fully implemented in Cases.pyx - Ignacio
 cdef class SP(CasesBase):
     cpdef initialize_reference(self, Grid Gr, ReferenceState Ref, NetCDFIO_Stats Stats)
-    cpdef initialize_profiles(self, Grid Gr, GridMeanVariables GMV, ReferenceState Ref, UpdraftVariables UpdVar)
+    cpdef initialize_profiles(self, Grid Gr, GridMeanVariables GMV, ReferenceState Ref)
     cpdef initialize_surface(self, Grid Gr,  ReferenceState Ref )
     cpdef initialize_forcing(self, Grid Gr,  ReferenceState Ref, GridMeanVariables GMV )
     cpdef initialize_io(self, NetCDFIO_Stats Stats)
@@ -135,7 +135,7 @@ cdef class SP(CasesBase):
 
 cdef class SaturatedBubble(CasesBase):
     cpdef initialize_reference(self, Grid Gr, ReferenceState Ref, NetCDFIO_Stats Stats)
-    cpdef initialize_profiles(self, Grid Gr, GridMeanVariables GMV, ReferenceState Ref , UpdraftVariables UpdVar )
+    cpdef initialize_profiles(self, Grid Gr, GridMeanVariables GMV, ReferenceState Ref)
     cpdef initialize_surface(self, Grid Gr,  ReferenceState Ref )
     cpdef initialize_forcing(self, Grid Gr,  ReferenceState Ref, GridMeanVariables GMV )
     cpdef initialize_io(self, NetCDFIO_Stats Stats)

@@ -49,7 +49,7 @@ cdef class CasesBase:
         return
     cpdef initialize_reference(self, Grid Gr, ReferenceState Ref, NetCDFIO_Stats Stats):
         return
-    cpdef initialize_profiles(self, Grid Gr, GridMeanVariables GMV, ReferenceState Ref, UpdraftVariables UpdVar):
+    cpdef initialize_profiles(self, Grid Gr, GridMeanVariables GMV, ReferenceState Ref):
         return
     cpdef initialize_surface(self, Grid Gr, ReferenceState Ref ):
         return
@@ -88,7 +88,7 @@ cdef class Soares(CasesBase):
         Ref.Tg = 300.0
         Ref.initialize(Gr, Stats)
         return
-    cpdef initialize_profiles(self, Grid Gr, GridMeanVariables GMV, ReferenceState Ref, UpdraftVariables UpdVar):
+    cpdef initialize_profiles(self, Grid Gr, GridMeanVariables GMV, ReferenceState Ref):
         cdef:
             double [:] theta = np.zeros((Gr.nzg,),dtype=np.double, order='c')
             double ql = 0.0, qi = 0.0
@@ -175,7 +175,7 @@ cdef class Bomex(CasesBase):
         Ref.qtg = 0.02245   #Total water mixing ratio at surface
         Ref.initialize(Gr, Stats)
         return
-    cpdef initialize_profiles(self, Grid Gr, GridMeanVariables GMV, ReferenceState Ref, UpdraftVariables UpdVar):
+    cpdef initialize_profiles(self, Grid Gr, GridMeanVariables GMV, ReferenceState Ref):
         cdef:
             double [:] thetal = np.zeros((Gr.nzg,), dtype=np.double, order='c')
             double ql=0.0, qi =0.0 # IC of Bomex is cloud-free
@@ -302,7 +302,7 @@ cdef class life_cycle_Tan2018(CasesBase):
         Ref.qtg = 0.02245   #Total water mixing ratio at surface
         Ref.initialize(Gr, Stats)
         return
-    cpdef initialize_profiles(self, Grid Gr, GridMeanVariables GMV, ReferenceState Ref, UpdraftVariables UpdVar):
+    cpdef initialize_profiles(self, Grid Gr, GridMeanVariables GMV, ReferenceState Ref):
         cdef:
             double [:] thetal = np.zeros((Gr.nzg,), dtype=np.double, order='c')
             double ql=0.0, qi =0.0 # IC of Bomex is cloud-free
@@ -435,7 +435,7 @@ cdef class Rico(CasesBase):
         Ref.initialize(Gr, Stats)
         return
 
-    cpdef initialize_profiles(self, Grid Gr, GridMeanVariables GMV, ReferenceState Ref, UpdraftVariables UpdVar):
+    cpdef initialize_profiles(self, Grid Gr, GridMeanVariables GMV, ReferenceState Ref):
         cdef:
             double [:] thetal = np.zeros((Gr.nzg,), dtype=np.double, order='c')
             double ql=0.0, qi =0.0 # IC of Rico is cloud-free
@@ -550,7 +550,7 @@ cdef class TRMM_LBA(CasesBase):
         Ref.qtg = eps_v * pvg/(Ref.Pg - pvg)#Total water mixing ratio at surface
         Ref.initialize(Gr, Stats)
         return
-    cpdef initialize_profiles(self, Grid Gr, GridMeanVariables GMV, ReferenceState Ref, UpdraftVariables UpdVar):
+    cpdef initialize_profiles(self, Grid Gr, GridMeanVariables GMV, ReferenceState Ref):
         cdef:
 
             double [:] p1 = np.zeros((Gr.nzg,),dtype=np.double,order='c')
@@ -866,7 +866,7 @@ cdef class ARM_SGP(CasesBase):
         Ref.qtg = 15.2/1000#Total water mixing ratio at surface
         Ref.initialize(Gr, Stats)
         return
-    cpdef initialize_profiles(self, Grid Gr, GridMeanVariables GMV, ReferenceState Ref, UpdraftVariables UpdVar):
+    cpdef initialize_profiles(self, Grid Gr, GridMeanVariables GMV, ReferenceState Ref):
         cdef:
             Py_ssize_t k
             double [:] p1 = np.zeros((Gr.nzg,),dtype=np.double,order='c')
@@ -996,7 +996,7 @@ cdef class GATE_III(CasesBase):
         Ref.qtg = 16.5/1000#Total water mixing ratio at surface
         Ref.initialize(Gr, Stats)
         return
-    cpdef initialize_profiles(self, Grid Gr, GridMeanVariables GMV, ReferenceState Ref, UpdraftVariables UpdVar):
+    cpdef initialize_profiles(self, Grid Gr, GridMeanVariables GMV, ReferenceState Ref):
         cdef:
             double qv
             double [:] qt = np.zeros((Gr.nzg,),dtype=np.double,order='c')
@@ -1181,7 +1181,7 @@ cdef class DYCOMS_RF01(CasesBase):
 
             return t_2, ql_2
 
-    cpdef initialize_profiles(self, Grid Gr, GridMeanVariables GMV, ReferenceState Ref, UpdraftVariables UpdVar):
+    cpdef initialize_profiles(self, Grid Gr, GridMeanVariables GMV, ReferenceState Ref):
         thetal = np.zeros((Gr.nzg,), dtype=np.double, order='c') # helper variable to recalculate temperature
         ql     = np.zeros((Gr.nzg,), dtype=np.double, order='c') # DYCOMS case is saturated
         qi     = 0.0                                             # no ice
@@ -1320,7 +1320,7 @@ cdef class GABLS(CasesBase):
         Ref.qtg = 1.0e-12 #Total water mixing ratio at surface. if set to 0, alpha0, rho0, p0 are NaN (TBD)
         Ref.initialize(Gr, Stats)
         return
-    cpdef initialize_profiles(self, Grid Gr, GridMeanVariables GMV, ReferenceState Ref, UpdraftVariables UpdVar):
+    cpdef initialize_profiles(self, Grid Gr, GridMeanVariables GMV, ReferenceState Ref):
         cdef:
             double [:] thetal = np.zeros((Gr.nzg,), dtype=np.double, order='c')
             double ql=0.0, qi =0.0 # IC of GABLS cloud-free
@@ -1418,7 +1418,7 @@ cdef class SP(CasesBase):
         Ref.initialize(Gr, Stats)
         return
 
-    cpdef initialize_profiles(self, Grid Gr, GridMeanVariables GMV, ReferenceState Ref, UpdraftVariables UpdVar):
+    cpdef initialize_profiles(self, Grid Gr, GridMeanVariables GMV, ReferenceState Ref):
         cdef:
             double [:] thetal = np.zeros((Gr.nzg,), dtype=np.double, order='c')
             double ql=0.0, qi =0.0 # IC of SP cloud-free
@@ -1544,7 +1544,7 @@ cdef class SaturatedBubble(CasesBase):
         Ref.initialize(Gr, Stats)
         return
 
-    cpdef initialize_profiles(self, Grid Gr, GridMeanVariables GMV, ReferenceState Ref, UpdraftVariables UpdVar ):
+    cpdef initialize_profiles(self, Grid Gr, GridMeanVariables GMV, ReferenceState Ref):
         n_updrafts = 1
         # initialize Grid Mean Profiles of thetali and qt
         z_in = np.array([

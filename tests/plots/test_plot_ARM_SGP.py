@@ -88,6 +88,7 @@ def test_plot_ARM_SGP(sim_data):
     pls.plot_closures(scm_dict, les_dict, t0, t1, cn+"closures.pdf", folder=f1)
     pls.plot_spec_hum(scm_dict, les_dict, t0, t1, cn+"humidities.pdf", folder=f1)
     pls.plot_upd_prop(scm_dict, les_dict, t0, t1, cn+"updraft_properties.pdf", folder=f1)
+    pls.plot_fluxes(scm_dict, les_dict, t0, t1, cn+"mean_fluxes.pdf", folder=f1)
     pls.plot_tke_comp(scm_dict, les_dict, t0, t1, cn+"tke_components.pdf", folder=f1)
 
     pls.plot_cvar_mean(scm_dict, les_dict, t0, t1, cn+"var_covar_mean.pdf", folder=f2)

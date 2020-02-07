@@ -85,6 +85,8 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
         double [:] massflux_tendency_h
         double [:] massflux_tendency_qt
         double [:] diffusive_flux_h
+        double [:] diffusive_flux_u
+        double [:] diffusive_flux_v
         double [:] diffusive_flux_qt
         double [:] diffusive_tendency_h
         double [:] diffusive_tendency_qt
@@ -186,3 +188,6 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
                                 EDMF_Environment.EnvironmentVariable phi_e, EDMF_Environment.EnvironmentVariable psi_e,
                                 EDMF_Environment.EnvironmentVariable_2m covar_e,
                                 double *gmv_phi, double *gmv_psi, double *gmv_covar)
+
+    cdef void GMV_third_m(self, VariableDiagnostic Gmv_third_m, EDMF_Environment.EnvironmentVariable_2m env_covar,
+                           EDMF_Environment.EnvironmentVariable  env_mean, EDMF_Updrafts.UpdraftVariable  upd_mean)

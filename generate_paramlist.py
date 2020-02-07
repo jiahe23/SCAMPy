@@ -35,8 +35,8 @@ def main():
     paramlist_defaults['meta'] = {}
 
     paramlist_defaults['turbulence'] = {}
-    paramlist_defaults['turbulence']['prandtl_number_0'] = 1.0
     paramlist_defaults['turbulence']['Ri_bulk_crit'] = 0.2
+    paramlist_defaults['turbulence']['prandtl_number_0'] = 0.74
 
     paramlist_defaults['turbulence']['EDMF_PrognosticTKE'] = {}
     paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['surface_area'] = 0.1
@@ -45,10 +45,10 @@ def main():
     paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['static_stab_coeff'] = 0.4
     paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['lambda_stab'] = 0.9
     paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['max_area_factor'] = 9.8
-    paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['entrainment_factor'] = 0.05
-    paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['detrainment_factor'] = 0.18
-    paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['turbulent_entrainment_factor'] = 0.077
-    paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['sorting_power'] = 5.0
+    paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['entrainment_factor'] = 0.1
+    paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['detrainment_factor'] = 0.5
+    paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['turbulent_entrainment_factor'] = 0.06
+    paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['sorting_power'] = 2.0
     paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['aspect_ratio'] = 0.2
     # This constant_plume_spacing corresponds to plume_spacing/alpha_d in the Tan et al paper,
     #with values plume_spacing=500.0, alpha_d = 0.375
@@ -57,13 +57,16 @@ def main():
     # TODO: merge the tan18 buoyancy forluma into normalmode formula -> simply set buoy_coeff1 as 1./3. and buoy_coeff2 as 0.
     paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['pressure_buoy_coeff'] = 1.0/3.0
 
-    paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['pressure_normalmode_buoy_coeff1'] = 1.0/3.0
+
+    paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['pressure_normalmode_buoy_coeff1'] = 0.22
     paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['pressure_normalmode_buoy_coeff2'] = 0.0
-    paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['pressure_normalmode_adv_coeff'] = 0.2
-    paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['pressure_normalmode_drag_coeff'] =  4.23
+    paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['pressure_normalmode_adv_coeff'] = 0.4
+    paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['pressure_normalmode_drag_coeff'] = 10.0
 
     if case_name == 'Soares':
         paramlist = Soares(paramlist_defaults)
+    elif case_name == 'Nieuwstadt':
+        paramlist = Nieuwstadt(paramlist_defaults)
     elif case_name == 'Bomex':
         paramlist = Bomex(paramlist_defaults)
     elif case_name == 'life_cycle_Tan2018':
@@ -97,11 +100,17 @@ def Soares(paramlist_defaults):
 
     return paramlist
 
+def Nieuwstadt(paramlist_defaults):
+
+    paramlist = copy.deepcopy(paramlist_defaults)
+    paramlist['meta']['casename'] = 'Nieuwstadt'
+
+    return paramlist
+    
 def Bomex(paramlist_defaults):
 
     paramlist = copy.deepcopy(paramlist_defaults)
     paramlist['meta']['casename'] = 'Bomex'
-    paramlist['turbulence']['prandtl_number_0'] = 0.74
 
     return  paramlist
 
@@ -147,7 +156,7 @@ def DYCOMS_RF01(paramlist_defaults):
     paramlist = copy.deepcopy(paramlist_defaults)
 
     paramlist['meta']['casename'] = 'DYCOMS_RF01'
-    paramlist['turbulence']['prandtl_number_0'] = 0.74
+    # paramlist['turbulence']['prandtl_number_0'] = 0.74
 
     return  paramlist
 
@@ -156,7 +165,7 @@ def GABLS(paramlist_defaults):
     paramlist = copy.deepcopy(paramlist_defaults)
 
     paramlist['meta']['casename'] = 'GABLS'
-    paramlist['turbulence']['prandtl_number_0'] = 0.74
+    # paramlist['turbulence']['prandtl_number_0'] = 0.74
     paramlist['turbulence']['EDMF_PrognosticTKE']['surface_area'] = 0.02
     return  paramlist
 

@@ -525,7 +525,7 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
         self.compute_pressure_plume_spacing(GMV, Case)
         self.wstar = get_wstar(Case.Sur.bflux, self.zi)
         if TS.nstep == 0:
-        
+
         #     print 'nstep == 0'
         #     print np.asarray( self.UpdVar.Area.values )
         #
@@ -1576,6 +1576,7 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
                 self.UpdVar.W.new[i,gw-1] = self.w_surface_bc[i]
                 self.UpdVar.Area.new[i,gw] = self.area_surface_bc[i]
                 au_lim = self.area_surface_bc[i] * self.max_area_factor
+                # au_lim = 0.5
 
                 for k in range(gw, self.Gr.nzg-gw):
 

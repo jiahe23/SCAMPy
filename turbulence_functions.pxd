@@ -33,6 +33,7 @@ cdef struct entr_in_struct:
     double b_mean
     double b_env
     double a_upd
+    double a_env
     double tke
     double RH_upd
     double RH_env

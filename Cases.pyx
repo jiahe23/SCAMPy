@@ -41,6 +41,9 @@ def CasesFactory(namelist, paramlist):
     elif namelist['meta']['casename'] == 'SaturatedBubble':
         return SaturatedBubble(paramlist)
 
+    elif namelist['meta']['casename'] == 'DryBubble':
+        return DryBubble(paramlist)
+
     else:
         print('case not recognized')
     return
@@ -1759,5 +1762,56 @@ cdef class SaturatedBubble(CasesBase):
         return
 
     cpdef update_forcing(self, GridMeanVariables GMV, TimeStepping TS):
+        self.Fo.update(GMV)
+        return
+
+
+cdef class DryBubble(CasesBase):
+    def __init__(self, paramlist):
+        self.casename = 'DryBubble'
+        self.Sur = Surface.SurfaceNone()
+        self.Fo = Forcing.ForcingNone()
+        self.inversion_option = 'critical_Ri'
+        self.Fo.apply_coriolis = False
+        self.Fo.apply_subsidence = False
+        return
+
+    cpdef initialize_reference(self, Grid Gr, ReferenceState Ref, NetCDFIO_Stats Stats):
+        Ref.Pg = 1.0e5  #Pressure at ground
+        Ref.qtg = 1.0e-5
+        Ref.Tg = 296
+        Ref.initialize(Gr, Stats)
+        return
+
+    cpdef initialize_profiles(self, Grid Gr, GridMeanVariables GMV, ReferenceState Ref):
+        later
+
+    cpdef initialize_surface(self, Grid Gr,  ReferenceState Ref ):
+        self.Sur.Gr = Gr
+        self.Sur.Ref = Ref
+        self.Sur.qsurface = 0.0196
+        self.Sur.shf = 8.0e-3 * cpm_c(self.Sur.qsurface) * Ref.rho0[Gr.gw-1]
+        self.Sur.initialize()
+        return
+
+    cpdef initialize_forcing(self, Grid Gr,  ReferenceState Ref, GridMeanVariables GMV )
+        self.Fo.Gr = Gr
+        self.Fo.Ref = Ref
+        self.Fo.initialize(GMV)
+        return
+
+    cpdef initialize_io(self, NetCDFIO_Stats Stats):
+        CasesBase.initialize_io(self, Stats)
+        return
+
+    cpdef io(self, NetCDFIO_Stats Stats):
+        CasesBase.io(self, Stats)
+        return
+
+    cpdef update_surface(self, GridMeanVariables GMV, TimeStepping TS):
+        self.Sur.update(GMV)
+        return
+
+    cpdef update_forcing(self, GridMeanVariables GMV, TimeStepping TS)
         self.Fo.update(GMV)
         return

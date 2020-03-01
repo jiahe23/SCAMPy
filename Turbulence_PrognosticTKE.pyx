@@ -280,6 +280,8 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
     cpdef initialize(self, CasesBase Case, GridMeanVariables GMV, ReferenceState Ref):
         if Case.casename == 'SaturatedBubble':
             self.UpdVar.initialize_bubble(GMV, Ref)
+        elif Case.casename == 'DryBubble':
+            self.UpdVar.initialize_drybubble(GMV, Ref)
         else:
             self.UpdVar.initialize(GMV)
         return

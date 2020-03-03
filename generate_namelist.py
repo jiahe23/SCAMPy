@@ -83,6 +83,8 @@ def main():
         namelist = SP(namelist_defaults)
     elif case_name == 'SaturatedBubble':
         namelist = SaturatedBubble(namelist_defaults)
+    elif case_name == 'DryBubble':
+        namelist = DryBubble(namelist_defaults)
     else:
         print('Not a valid case name')
         exit()
@@ -119,7 +121,7 @@ def Nieuwstadt(namelist_defaults):
     namelist['meta']['casename'] = 'Nieuwstadt'
 
     return namelist
-    
+
 def Bomex(namelist_defaults):
 
     namelist = copy.deepcopy(namelist_defaults)
@@ -270,6 +272,20 @@ def SaturatedBubble(namelist_defaults):
     namelist['time_stepping']['t_max'] = 1000.0
     namelist['meta']['simname'] = 'SaturatedBubble'
     namelist['meta']['casename'] = 'SaturatedBubble'
+
+    return namelist
+
+def DryBubble(namelist_defaults):
+    namelist = copy.deepcopy(namelist_defaults)
+
+    namelist['grid']['nz'] = 200
+    namelist['grid']['dz'] = 50.0
+
+    namelist['stats_io']['frequency'] = 10.0
+    namelist['time_stepping']['dt'] = 10.0
+    namelist['time_stepping']['t_max'] = 1000.0
+    namelist['meta']['simname'] = 'DryBubble'
+    namelist['meta']['casename'] = 'DryBubble'
 
     return namelist
 

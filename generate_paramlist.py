@@ -87,6 +87,8 @@ def main():
         paramlist = SP(paramlist_defaults)
     elif case_name == 'SaturatedBubble':
         paramlist = SaturatedBubble(paramlist_defaults)
+    elif case_name == 'DryBubble':
+        paramlist = DryBubble(paramlist_defaults)
     else:
         print('Not a valid case name')
         exit()
@@ -106,7 +108,7 @@ def Nieuwstadt(paramlist_defaults):
     paramlist['meta']['casename'] = 'Nieuwstadt'
 
     return paramlist
-    
+
 def Bomex(paramlist_defaults):
 
     paramlist = copy.deepcopy(paramlist_defaults)
@@ -178,10 +180,17 @@ def SP(paramlist_defaults):
     return  paramlist
 
 def SaturatedBubble(paramlist_defaults):
-    paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['surface_area'] = 0.01
     paramlist = copy.deepcopy(paramlist_defaults)
     paramlist['meta']['casename'] = 'SaturatedBubble'
+    paramlist['turbulence']['EDMF_PrognosticTKE']['surface_area'] = 0.01
+    paramlist['turbulence']['EDMF_PrognosticTKE']['max_area_factor'] = 98.0
+    return  paramlist
 
+def DryBubble(paramlist_defaults):
+    paramlist = copy.deepcopy(paramlist_defaults)
+    paramlist['meta']['casename'] = 'DryBubble'
+    paramlist['turbulence']['EDMF_PrognosticTKE']['surface_area'] = 0.01
+    paramlist['turbulence']['EDMF_PrognosticTKE']['max_area_factor'] = 98.0
     return  paramlist
 
 

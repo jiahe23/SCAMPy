@@ -566,8 +566,6 @@ cdef class UpdraftThermodynamics:
             double alpha, qv, qt, t, h
             Py_ssize_t gw = self.Gr.gw
 
-        # print '-- upd thermo buoy --'
-
         UpdVar.Area.bulkvalues = np.sum(UpdVar.Area.values,axis=0)
 
         if not extrap:
@@ -586,11 +584,6 @@ cdef class UpdraftThermodynamics:
             with nogil:
                 for i in xrange(self.n_updraft):
                     for k in xrange(self.Gr.gw, self.Gr.nzg-self.Gr.gw):
-                        # if k < 5:
-                        #     with gil:
-                        #         print 'k: ' + str(k)
-                        #         print 'area k: ' + str( UpdVar.Area.values[i,k] )
-                        #         print 'area k-1: ' + str( UpdVar.Area.values[i,k-1] )
                         if UpdVar.Area.values[i,k] > 0.0:
 
                             qt = UpdVar.QT.values[i,k]
@@ -601,10 +594,6 @@ cdef class UpdraftThermodynamics:
                             UpdVar.B.values[i,k] = buoyancy_c(self.Ref.alpha0_half[k], alpha)
                             UpdVar.RH.values[i,k] = relative_humidity_c(self.Ref.p0_half[k], qt, qt-qv, 0.0, t)
                         elif UpdVar.Area.values[i,k-1] > 0.0 and k>self.Gr.gw:
-                            # if k < 5:
-                            #     with gil:
-                            #         print 'k: ' + str(k)
-                            #         print 'elif choice'
                             sa = eos(self.t_to_prog_fp, self.prog_to_t_fp, self.Ref.p0_half[k],
                                      qt, h)
                             qt -= sa.ql
@@ -614,10 +603,6 @@ cdef class UpdraftThermodynamics:
                             UpdVar.B.values[i,k] = buoyancy_c(self.Ref.alpha0_half[k], alpha)
                             UpdVar.RH.values[i,k] = relative_humidity_c(self.Ref.p0_half[k], qt, qt-qv, 0.0, t)
                         else:
-                            # if k < 5:
-                            #     with gil:
-                            #         print 'k: ' + str(k)
-                            #         print 'b upd <- env'
                             UpdVar.B.values[i,k] = EnvVar.B.values[k]
                             UpdVar.RH.values[i,k] = EnvVar.RH.values[k]
 

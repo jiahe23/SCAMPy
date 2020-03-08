@@ -49,12 +49,11 @@ cdef class SurfaceNone(SurfaceBase):
     cpdef initialize(self):
         return
     cpdef update(self, GridMeanVariables GMV, ):
+        # JH: assigning small fluxed so that simulation won't crash when computing mixing length
         cdef:
             Py_ssize_t k, gw = self.Gr.gw
         self.windspeed = 0.0001
         self.zrough = 1e-4
-
-        # self.bflux = buoyancy_flux(self.shf, self.lhf, GMV.T.values[gw], GMV.QT.values[gw],self.Ref.alpha0[gw-1]  )
         self.bflux = 1e-4
         self.ustar = compute_ustar(self.windspeed, self.bflux, self.zrough, self.Gr.z_half[gw])
 

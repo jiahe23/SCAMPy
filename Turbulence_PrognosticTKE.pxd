@@ -43,6 +43,9 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
         double minimum_area
         double entrainment_factor
         double detrainment_factor
+        double entrainment_sigma
+        double entrainment_scale
+        double updraft_mixing_frac
         double sorting_power
         double turbulent_entrainment_factor
         double vel_pressure_coeff # used by diagnostic plume option; now calc'ed from Tan et al 2018 coefficient set
@@ -78,6 +81,8 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
         double [:] h_surface_bc
         double [:] qt_surface_bc
         double [:] w_surface_bc
+        double entr_surface_bc
+        double detr_surface_bc
         double [:,:] m # mass flux
         double [:] massflux_h
         double [:] massflux_qt
@@ -99,7 +104,7 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
         double [:] tke_pressure
         double [:] tke_transport
         double [:] tke_advection
-        double max_area_factor
+        double max_area
         double tke_ed_coeff
         double tke_diss_coeff
         double static_stab_coeff
@@ -134,7 +139,7 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
 
     cpdef initialize(self, CasesBase Case, GridMeanVariables GMV, ReferenceState Ref)
     cpdef initialize_io(self, NetCDFIO_Stats Stats)
-    cpdef io(self, NetCDFIO_Stats Stats)
+    cpdef io(self, NetCDFIO_Stats Stats, TimeStepping TS)
     cpdef update(self,GridMeanVariables GMV, CasesBase Case, TimeStepping TS)
     cpdef compute_prognostic_updrafts(self, GridMeanVariables GMV, CasesBase Case, TimeStepping TS)
     cpdef compute_diagnostic_updrafts(self, GridMeanVariables GMV, CasesBase Case)
@@ -164,7 +169,8 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
     cpdef compute_tke_pressure(self)
     cdef void compute_covariance_dissipation(self, EDMF_Environment.EnvironmentVariable_2m Covar)
     cdef void compute_covariance_entr(self, EDMF_Environment.EnvironmentVariable_2m Covar, EDMF_Updrafts.UpdraftVariable UpdVar1,
-                EDMF_Updrafts.UpdraftVariable UpdVar2, EDMF_Environment.EnvironmentVariable EnvVar1, EDMF_Environment.EnvironmentVariable EnvVar2)
+                EDMF_Updrafts.UpdraftVariable UpdVar2, EDMF_Environment.EnvironmentVariable EnvVar1, EDMF_Environment.EnvironmentVariable EnvVar2,
+                VariablePrognostic GmvVar1, VariablePrognostic GmvVar2)
     cdef void compute_covariance_detr(self, EDMF_Environment.EnvironmentVariable_2m Covar)
     cdef void compute_covariance_shear(self,GridMeanVariables GMV, EDMF_Environment.EnvironmentVariable_2m Covar,
                                        double *UpdVar1, double *UpdVar2, double *EnvVar1, double *EnvVar2)

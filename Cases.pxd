@@ -135,7 +135,7 @@ cdef class SP(CasesBase):
 
 cdef class SaturatedBubble(CasesBase):
     cpdef initialize_reference(self, Grid Gr, ReferenceState Ref, NetCDFIO_Stats Stats)
-    cpdef initialize_profiles(self, Grid Gr, GridMeanVariables GMV, ReferenceState Ref)
+    cpdef initialize_profiles(self, Grid Gr, GridMeanVariables GMV, ReferenceState Ref )
     cpdef initialize_surface(self, Grid Gr,  ReferenceState Ref )
     cpdef initialize_forcing(self, Grid Gr,  ReferenceState Ref, GridMeanVariables GMV )
     cpdef initialize_io(self, NetCDFIO_Stats Stats)
@@ -145,7 +145,7 @@ cdef class SaturatedBubble(CasesBase):
 
 cdef class DryBubble(CasesBase):
     cpdef initialize_reference(self, Grid Gr, ReferenceState Ref, NetCDFIO_Stats Stats)
-    cpdef initialize_profiles(self, Grid Gr, GridMeanVariables GMV, ReferenceState Ref)
+    cpdef initialize_profiles(self, Grid Gr, GridMeanVariables GMV, ReferenceState Ref )
     cpdef initialize_surface(self, Grid Gr,  ReferenceState Ref )
     cpdef initialize_forcing(self, Grid Gr,  ReferenceState Ref, GridMeanVariables GMV )
     cpdef initialize_io(self, NetCDFIO_Stats Stats)

@@ -44,10 +44,13 @@ def main():
     paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['tke_diss_coeff'] = 0.26
     paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['static_stab_coeff'] = 0.4
     paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['lambda_stab'] = 0.9
-    paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['max_area_factor'] = 9.8
+    paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['max_area'] = 0.9
     paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['entrainment_factor'] = 0.1
     paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['detrainment_factor'] = 0.5
     paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['turbulent_entrainment_factor'] = 0.06
+    paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['updraft_mixing_frac'] = 0.25
+    paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['entrainment_sigma'] = 10.0
+    paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['entrainment_scale'] = 0.004
     paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['sorting_power'] = 2.0
     paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['aspect_ratio'] = 0.2
     # This constant_plume_spacing corresponds to plume_spacing/alpha_d in the Tan et al paper,
@@ -158,7 +161,6 @@ def DYCOMS_RF01(paramlist_defaults):
     paramlist = copy.deepcopy(paramlist_defaults)
 
     paramlist['meta']['casename'] = 'DYCOMS_RF01'
-    # paramlist['turbulence']['prandtl_number_0'] = 0.74
 
     return  paramlist
 
@@ -167,8 +169,6 @@ def GABLS(paramlist_defaults):
     paramlist = copy.deepcopy(paramlist_defaults)
 
     paramlist['meta']['casename'] = 'GABLS'
-    # paramlist['turbulence']['prandtl_number_0'] = 0.74
-    paramlist['turbulence']['EDMF_PrognosticTKE']['surface_area'] = 0.02
     return  paramlist
 
 # Not fully implemented yet - Ignacio
@@ -182,15 +182,22 @@ def SP(paramlist_defaults):
 def SaturatedBubble(paramlist_defaults):
     paramlist = copy.deepcopy(paramlist_defaults)
     paramlist['meta']['casename'] = 'SaturatedBubble'
-    paramlist['turbulence']['EDMF_PrognosticTKE']['surface_area'] = 0.01
-    paramlist['turbulence']['EDMF_PrognosticTKE']['max_area_factor'] = 98.0
     return  paramlist
 
 def DryBubble(paramlist_defaults):
     paramlist = copy.deepcopy(paramlist_defaults)
     paramlist['meta']['casename'] = 'DryBubble'
-    paramlist['turbulence']['EDMF_PrognosticTKE']['surface_area'] = 0.01
-    paramlist['turbulence']['EDMF_PrognosticTKE']['max_area_factor'] = 98.0
+    paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['entrainment_factor'] = 0.05
+    paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['detrainment_factor'] = 0.3
+    paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['turbulent_entrainment_factor'] = 0.01
+    paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['entrainment_sigma'] = 5.0
+
+    paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['max_area'] = 0.5
+
+    paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['pressure_normalmode_buoy_coeff1'] = 0.1
+    paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['pressure_normalmode_adv_coeff'] = 0.5
+    paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['pressure_normalmode_drag_coeff'] = 0.1
+
     return  paramlist
 
 

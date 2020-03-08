@@ -23,7 +23,9 @@ def main():
 
     namelist_defaults['thermodynamics'] = {}
     namelist_defaults['thermodynamics']['thermal_variable'] = 'thetal'
-    namelist_defaults['thermodynamics']['sgs'] = 'mean'
+    namelist_defaults['thermodynamics']['sgs'] = 'quadrature'
+    namelist_defaults['thermodynamics']['quadrature_order'] = 3
+    namelist_defaults['thermodynamics']['quadrature_type'] = "log-normal" #'gaussian' or 'log-normal'
 
     namelist_defaults['time_stepping'] = {}
 
@@ -127,7 +129,7 @@ def Bomex(namelist_defaults):
     namelist = copy.deepcopy(namelist_defaults)
 
     namelist['grid']['nz'] = 75
-    namelist['grid']['dz'] = 100 / 2.5
+    namelist['grid']['dz'] = 40.0
 
     namelist['time_stepping']['dt'] = 20.0
     namelist['time_stepping']['t_max'] = 21600.0
@@ -142,7 +144,7 @@ def life_cycle_Tan2018(namelist_defaults):
     namelist = copy.deepcopy(namelist_defaults)
 
     namelist['grid']['nz'] = 75
-    namelist['grid']['dz'] = 100 / 2.5
+    namelist['grid']['dz'] = 40.0
 
     namelist['time_stepping']['dt'] = 30.0
     namelist['time_stepping']['t_max'] = 6*3600.0

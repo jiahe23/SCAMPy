@@ -80,7 +80,7 @@ def read_scm_data(scm_data):
     variables = ["temperature_mean", "thetal_mean", "qt_mean", "ql_mean", "qr_mean",\
                  "buoyancy_mean", "b_mix","u_mean", "v_mean", "tke_mean",\
                  "updraft_buoyancy", "updraft_area", "env_qt", "updraft_qt", "env_ql", "updraft_ql", "updraft_thetal",\
-                 "env_qr", "updraft_qr", "updraft_w", "env_w", "env_thetal",\
+                 "env_qr", "updraft_qr", "env_RH", "updraft_RH", "updraft_w", "env_w", "env_thetal",\
                  "massflux_h", "diffusive_flux_h", "total_flux_h", "diffusive_flux_u", "diffusive_flux_v",\
                  "massflux_qt","diffusive_flux_qt","total_flux_qt","turbulent_entrainment",\
                  "eddy_viscosity", "eddy_diffusivity", "mixing_length", "mixing_length_ratio",\
@@ -122,8 +122,8 @@ def read_les_data(les_data):
     variables = ["temperature_mean", "thetali_mean", "qt_mean", "ql_mean", "buoyancy_mean",\
                  "u_mean", "v_mean", "tke_mean","v_translational_mean", "u_translational_mean",\
                  "updraft_buoyancy", "updraft_fraction", "env_thetali", "updraft_thetali",\
-                 "env_qt", "updraft_qt", "env_ql", "updraft_ql",\
-                 "diffusive_flux_u", "diffusive_flux_v","massflux_u", "massflux_v","total_flux_u", "total_flux_v",\
+                 "env_qt", "updraft_qt","env_RH", "updraft_RH", "env_ql", "updraft_ql",\
+                 "diffusive_flux_u", "diffusive_flux_v","massflux","massflux_u", "massflux_v","total_flux_u", "total_flux_v",\
                  "qr_mean", "env_qr", "updraft_qr", "updraft_w", "env_w",  "env_buoyancy", "updraft_ddz_p_alpha",\
                  "thetali_mean2", "qt_mean2", "env_thetali2", "env_qt2", "env_qt_thetali",\
                  "tke_prod_A" ,"tke_prod_B" ,"tke_prod_D" ,"tke_prod_P" ,"tke_prod_T" ,"tke_prod_S",\
@@ -157,7 +157,8 @@ def read_scm_data_timeseries(scm_data):
     scm_data - scampy netcdf dataset with simulation results
     """
     variables = ["cloud_cover_mean", "cloud_base_mean", "cloud_top_mean",\
-                 "ustar", "lwp_mean", "rwp_mean", "shf", "lhf", "Tsurface", "rd"]
+                 "ustar", "lwp_mean", "rwp_mean", "shf", "lhf", "Tsurface",\
+                 "rd", "cutoff_rain_rate"]
 
     data = {"z_half" : np.array(scm_data["profiles/z_half"][:]),\
             "t" : np.array(scm_data["profiles/t"][:])}

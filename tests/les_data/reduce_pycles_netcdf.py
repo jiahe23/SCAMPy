@@ -35,8 +35,12 @@ def main():
     total_flux_v_ = data.groups['profiles'].variables['resolved_y_vel_flux']
 
     updraft_ddz_p_alpha_ = data.groups['profiles'].variables['updraft_ddz_p_alpha']
+
     rho_ = data.groups['reference'].variables['rho0_half']
-    p0_ = data.groups['reference'].variables['rho0_half']
+    p0_ = data.groups['reference'].variables['p0_half']
+
+    t = np.array(data.groups['profiles'].variables['t'])
+    z = np.array(data.groups['profiles'].variables['z_half'])
 
     # try the TKE diagnostics outputs
     tke_prod_A_ = data.groups['profiles'].variables['tke_prod_A']
@@ -46,6 +50,11 @@ def main():
     tke_prod_T_ = data.groups['profiles'].variables['tke_prod_T']
     tke_prod_S_ = data.groups['profiles'].variables['tke_prod_S']
     tke_nd_mean_ = data.groups['profiles'].variables['tke_nd_mean']
+    try:
+        cloud_fraction_ = data.groups['profiles'].variables['cloud_fraction']
+    except:
+        cloud_fraction_ = np.zeros_like(env_w_)
+
     try:
         resolved_z_flux_thetali_ = data.groups['profiles'].variables['resolved_z_flux_thetali']
         resolved_z_flux_qt_ = data.groups['profiles'].variables['resolved_z_flux_qt']
@@ -89,11 +98,15 @@ def main():
     try:
         ql_mean_ = data.groups['profiles'].variables['ql_mean']
         env_ql_ = data.groups['profiles'].variables['env_ql']
+        env_qv_ = data.groups['profiles'].variables['env_qv']
         updraft_ql_ = data.groups['profiles'].variables['updraft_ql']
+        updraft_qv_ = data.groups['profiles'].variables['updraft_qv']
     except:
         ql_mean_ = np.zeros_like(env_w_)
         env_ql_ = np.zeros_like(env_w_)
+        env_qv_ = np.zeros_like(env_w_)
         updraft_ql_ = np.zeros_like(env_w_)
+        updraft_qv_ = np.zeros_like(env_w_)
     try:
         env_qt_thetali_ = data.groups['profiles'].variables['env_qt_thetali']
     except:
@@ -120,17 +133,24 @@ def main():
     shf_surface_mean_ = data.groups['timeseries'].variables['shf_surface_mean']
     lhf_surface_mean_ = data.groups['timeseries'].variables['lhf_surface_mean']
     try:
-        cloud_fraction_ = data.groups['timeseries'].variables['cloud_fraction']
+        cloud_fraction_mean_ = data.groups['timeseries'].variables['cloud_fraction']
         cloud_base_ = data.groups['timeseries'].variables['cloud_base']
         cloud_top_ = data.groups['timeseries'].variables['cloud_top']
     except:
-        cloud_fraction_ = np.zeros_like(lhf_surface_mean_)
+        cloud_fraction_mean_ = np.zeros_like(lhf_surface_mean_)
         cloud_base_ = np.zeros_like(lhf_surface_mean_)
         cloud_top_ = np.zeros_like(lhf_surface_mean_)
     try:
         lwp_ = data.groups['timeseries'].variables['lwp']
     except:
     	lwp_ = np.zeros_like(lhf_surface_mean_)
+    try:
+        updraft_temperature_ = data.groups['profiles'].variables['updraft_temperature']
+        env_temperature_ = data.groups['profiles'].variables['env_temperature']
+    except:
+        updraft_temperature_ = np.zeros_like(thetali_mean_)
+        env_temperature_ = np.zeros_like(thetali_mean_)
+
     # thetali_srf_int_ = data.groups['timeseries'].variables['thetali_srf_int'] # this is here since
 
     z_half_ = data.groups['profiles'].variables['z_half']
@@ -138,8 +158,9 @@ def main():
 
 
     # flux diagnosis (diffusive_flux = total_flux - massflux, diffusive_flux is weighted by env_fraction as in scampy TubrbProgTKE line 1723)
-    a_1_a = np.multiply(updraft_fraction_, np.subtract(1.0,updraft_fraction_))
     rho_temp = np.tile(rho_,(np.shape(updraft_fraction_)[0],1))
+    p0_temp = np.tile(p0_,(np.shape(updraft_fraction_)[0],1))
+    a_1_a = np.multiply(rho_temp, np.multiply(updraft_fraction_, np.subtract(1.0,updraft_fraction_)))
     updraft_buoyancy_ -=buoyancy_mean_
     env_buoyancy_ -=buoyancy_mean_
     Wvar_mean_ = calc_covar(w_mean2_, w_mean_, w_mean_)
@@ -148,7 +169,7 @@ def main():
     env_Hvar_ = calc_covar(env_thetali2_,   env_thetali_,  env_thetali_)
     env_QTvar_ = calc_covar(env_qt2_,        env_qt_,       env_qt_)
     env_HQTcov_ = calc_covar(env_qt_thetali_, env_qt_,       env_thetali_)
-    massflux_          = np.multiply(a_1_a,np.multiply(np.subtract(updraft_w_, env_w_), np.subtract(updraft_w_, env_w_)))
+    massflux_          = np.multiply(updraft_fraction_,np.multiply(rho_,updraft_w_))
     massflux_h_        = np.multiply(a_1_a,np.multiply(np.subtract(updraft_w_, env_w_), np.subtract(updraft_thetali_, env_thetali_)))
     massflux_qt_       = np.multiply(a_1_a,np.multiply(np.subtract(updraft_w_, env_w_), np.subtract(updraft_qt_, env_qt_)))
     massflux_u_        = np.multiply(a_1_a,np.multiply(np.subtract(updraft_w_, env_w_), np.subtract(updraft_u_, env_u_)))
@@ -172,6 +193,12 @@ def main():
     H_third_m_ = calc_third_m(thetali_mean_, thetali_mean2_, thetali_mean3_, Hvar_mean_, updraft_fraction_)
     QT_third_m_ = calc_third_m(qt_mean_, qt_mean2_, qt_mean3_, QTvar_mean_, updraft_fraction_)
     W_third_m_ = calc_third_m(w_mean_, w_mean2_, w_mean3_, Wvar_mean_, updraft_fraction_)
+
+    updraft_RH_ = np.zeros_like(env_qt_)
+    env_RH_ = np.zeros_like(env_qt_)
+
+    updraft_RH_ = relative_humidity(p0_temp, updraft_qt_, updraft_qv_, updraft_temperature_)
+    env_RH_     = relative_humidity(p0_temp, env_qt_, env_qv_, env_temperature_)
 
     output = nc.Dataset(fname, "w", format="NETCDF4")
     output.createDimension('z', len(z_half_))
@@ -209,6 +236,7 @@ def main():
     massflux_u = profiles_grp.createVariable('massflux_u','f4',('t','z'))
     massflux_v = profiles_grp.createVariable('massflux_v','f4',('t','z'))
     buoyancy_mean = profiles_grp.createVariable('buoyancy_mean','f4',('t','z'))
+    cloud_fraction = profiles_grp.createVariable('cloud_fraction','f4',('t','z'))
     # resolved_z_flux_thetali = profiles_grp.createVariable('resolved_z_flux_thetali','f4',('t','z'))
     # resolved_z_flux_qt = profiles_grp.createVariable('resolved_z_flux_qt','f4',('t','z'))
     temperature_mean = profiles_grp.createVariable('temperature_mean','f4',('t','z'))
@@ -234,6 +262,8 @@ def main():
     env_qr = profiles_grp.createVariable('env_qr','f4',('t','z'))
     updraft_qr = profiles_grp.createVariable('updraft_qr','f4',('t','z'))
     updraft_w = profiles_grp.createVariable('updraft_w','f4',('t','z'))
+    updraft_RH = profiles_grp.createVariable('updraft_RH','f4',('t','z'))
+    env_RH     = profiles_grp.createVariable('env_RH','f4',('t','z'))
     env_w = profiles_grp.createVariable('env_w','f4',('t','z'))
     thetali_mean2 = profiles_grp.createVariable('thetali_mean2','f4',('t','z'))
     qt_mean2 = profiles_grp.createVariable('qt_mean2','f4',('t','z'))
@@ -295,6 +325,8 @@ def main():
     v_translational_mean[:,:] = v_translational_mean_[:,:]
     u_translational_mean[:,:] = u_translational_mean_[:,:]
     updraft_buoyancy[:,:] = updraft_buoyancy_[:,:]
+    updraft_RH[:,:] = updraft_RH_[:,:]
+    env_RH[:,:] = env_RH_[:,:]
     updraft_fraction[:,:] = updraft_fraction_[:,:]
     env_thetali[:,:] = env_thetali_[:,:]
     updraft_thetali[:,:] = updraft_thetali_[:,:]
@@ -320,8 +352,9 @@ def main():
     tke_prod_T[:,:] = tke_prod_T_[:,:]
     tke_prod_S[:,:] = tke_prod_S_[:,:]
     tke_nd_mean[:,:] = tke_nd_mean_[:,:]
+    cloud_fraction[:] = cloud_fraction_[:]
 
-    cloud_fraction_mean[:] = cloud_fraction_[:]
+    cloud_fraction_mean[:] = cloud_fraction_mean_[:]
     cloud_base_mean[:] = cloud_base_[:]
     cloud_top_mean[:] = cloud_top_[:]
     friction_velocity_mean[:] = friction_velocity_mean_[:]
@@ -344,6 +377,14 @@ def calc_third_m(var, var2, var3, covar, upd_frac):
     C = np.add(A,B)
     third_m = np.subtract(var3,C)
     return third_m
+
+def relative_humidity(p0, qt, qv, T):
+    eps_vi   = 1.60745384883
+    Tc       = np.subtract(T, 273.15)
+    pv       = np.multiply(p0, np.divide(np.multiply(eps_vi , qv) ,(np.subtract(np.add(1.0,np.multiply(eps_vi , qv)),qt))))
+    pv_star_ = np.multiply(100.0, 6.1094*np.exp((17.625*np.divide(Tc,np.add(Tc,243.04)))))
+    RH       = np.multiply(100.0, np.divide(pv,pv_star_))
+    return RH
 
 if __name__ == '__main__':
     main()

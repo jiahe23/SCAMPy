@@ -38,55 +38,33 @@ cdef entr_struct entr_detr_inverse_w(entr_in_struct entr_in) nogil:
         _ret.detr_sc = 0.0
     return _ret
 
-''' clima-master '''
-# cdef entr_struct entr_detr_env_moisture_deficit(entr_in_struct entr_in) nogil:
-#     cdef:
-#         entr_struct _ret
-#         double f_ent, f_det, dw2, db_p, db_m,db_a, c_det
-#
-#     f_ent = (fmax((entr_in.RH_upd/100.0)**entr_in.sort_pow-(entr_in.RH_env/100.0)**entr_in.sort_pow,0.0))**(1/entr_in.sort_pow)
-#     f_det = (fmax((entr_in.RH_env/100.0)**entr_in.sort_pow-(entr_in.RH_upd/100.0)**entr_in.sort_pow,0.0))**(1/entr_in.sort_pow)
-#     _ret.sorting_function = f_ent
-#
-#     c_det = entr_in.c_det
-#     if (entr_in.ql_up+entr_in.ql_env)==0.0:
-#         c_det = 0.0
-#
-#     dw2  = fmax((entr_in.w_upd - entr_in.w_env)**2.0, 1e-2)
-#     db_p = fmax(entr_in.b_upd - entr_in.b_env,0.0)
-#     db_m = fmax(entr_in.b_env - entr_in.b_upd,0.0)
-#     db_a = fabs(entr_in.b_env - entr_in.b_upd)
-#     _ret.entr_sc = entr_in.c_ent*db_p/dw2 + c_det*f_det*db_a/dw2
-#     _ret.detr_sc = entr_in.c_ent*db_m/dw2 + c_det*f_ent*db_a/dw2
-#
-#     return _ret
-''' clima-master '''
-
-''' Yair's updated formula '''
 cdef entr_struct entr_detr_env_moisture_deficit(entr_in_struct entr_in) nogil:
     cdef:
         entr_struct _ret
-        double f_ent, f_det, c_det, bmix, x_up, area_regulator,f_p, chi, sigma, db ,sigma_tau ,mu_tau, mu
-    f_ent = (fmax((entr_in.RH_upd/100.0)**entr_in.sort_pow-(entr_in.RH_env/100.0)**entr_in.sort_pow,0.0))**(1/entr_in.sort_pow)
-    f_det = (fmax((entr_in.RH_env/100.0)**entr_in.sort_pow-(entr_in.RH_upd/100.0)**entr_in.sort_pow,0.0))**(1/entr_in.sort_pow)
-    _ret.sorting_function = f_ent
+        double moisture_deficit_e, moisture_deficit_d, c_det, mu, db, dw, logistic_e, logistic_d
+
+    moisture_deficit_d = (fmax((entr_in.RH_upd/100.0)**entr_in.sort_pow-(entr_in.RH_env/100.0)**entr_in.sort_pow,0.0))**(1.0/entr_in.sort_pow)
+    moisture_deficit_e = (fmax((entr_in.RH_env/100.0)**entr_in.sort_pow-(entr_in.RH_upd/100.0)**entr_in.sort_pow,0.0))**(1.0/entr_in.sort_pow)
+    _ret.sorting_function = moisture_deficit_e
     c_det = entr_in.c_det
     if (entr_in.ql_up+entr_in.ql_env)==0.0:
         c_det = 0.0
+
     dw   = entr_in.w_upd - entr_in.w_env
     if dw < 0.0:
         dw -= 0.001
     else:
         dw += 0.001
+
     db = (entr_in.b_upd - entr_in.b_env)
-    mu = db/dw*(0.25-entr_in.a_upd/(entr_in.a_upd+entr_in.a_env))
-    sigma = 0.008
-    tau_e = 0.5*fabs(db/dw)*(1.0+erf(mu/sqrt(2.0*sigma**2.0)))
-    tau_d = 0.5*fabs(db/dw)*(1.0-erf(mu/sqrt(2.0*sigma**2.0)))
-    _ret.entr_sc = (entr_in.c_ent*tau_e + fabs(db/dw)*c_det*f_det)/dw
-    _ret.detr_sc = (entr_in.c_ent*tau_d + fabs(db/dw)*c_det*f_ent)/dw
+    mu = entr_in.c_mu/entr_in.c_mu0
+
+    logistic_e = 1.0/(1.0+exp(-mu*db/dw*(entr_in.chi_upd - entr_in.a_upd/(entr_in.a_upd+entr_in.a_env))))
+    logistic_d = 1.0/(1.0+exp( mu*db/dw*(entr_in.chi_upd - entr_in.a_upd/(entr_in.a_upd+entr_in.a_env))))
+
+    _ret.entr_sc = fabs(db/dw)/dw*(entr_in.c_ent*logistic_e + c_det*moisture_deficit_e)
+    _ret.detr_sc = fabs(db/dw)/dw*(entr_in.c_ent*logistic_d + c_det*moisture_deficit_d)
     return _ret
-''' Yair's updated formula '''
 
 cdef entr_struct entr_detr_buoyancy_sorting(entr_in_struct entr_in) nogil:
 
@@ -317,13 +295,9 @@ cdef pressure_drag_struct pressure_normalmode_drag(pressure_in_struct press_in) 
     _ret.nh_pressure_adv = press_in.rho0_kfull * press_in.a_kfull * press_in.beta1*press_in.w_kfull*(press_in.w_kphalf
                           -press_in.w_khalf)*press_in.dzi
 
-    # TODO: need to test whehter the updraft_top or rd is a better length scale used in the drag term -> for now rd is used being consistent with tan18
-
-    # # H based calc:  using the vertical length scale of the plume
-    _ret.nh_pressure_drag = -1.0 * press_in.rho0_kfull * press_in.a_kfull * press_in.beta2*press_in.w_kfull**2/fmax(press_in.updraft_top, 500.0)
-
-    # TODO: shrink the limit on H to dz or maybe 5*dz?
-    # _ret.nh_pressure_drag = -1.0 * press_in.rho0_kfull * press_in.a_kfull * press_in.beta2*press_in.w_kfull**2/fmax(press_in.updraft_top, 2.0*press_in.dz)
+    # drag as w_dif and account for downdrafts
+    _ret.nh_pressure_drag = -1.0 * press_in.rho0_kfull * press_in.a_kfull * press_in.beta2 * (press_in.w_kfull -
+                            press_in.w_kenv)*fabs(press_in.w_kfull - press_in.w_kenv)/fmax(press_in.updraft_top, 500.0)
 
     return _ret
 

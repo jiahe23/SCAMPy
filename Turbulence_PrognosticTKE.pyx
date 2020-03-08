@@ -522,37 +522,11 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
             Py_ssize_t k
             Py_ssize_t kmin = self.Gr.gw
             Py_ssize_t kmax = self.Gr.nzg - self.Gr.gw
-
-        print '--------------------'
-        print 't: ' + str(TS.t)
-        # print 'before update: '
-        # print 'upd area: ' + str( np.asarray(self.UpdVar.Area.values) )
-        #
+                
         self.update_inversion(GMV, Case.inversion_option)
         self.compute_pressure_plume_spacing(GMV, Case)
         self.wstar = get_wstar(Case.Sur.bflux, self.zi)
         if TS.nstep == 0:
-
-        #     print 'nstep == 0'
-        #     print np.asarray( self.UpdVar.Area.values )
-        #
-        #     for k in np.arange(self.Gr.gw, 11):
-        #         print 'k: '+str(k)
-        #         print 'upd b: '+str(self.UpdVar.B.values[0,k])
-        #         print 'env b: '+str(self.EnvVar.B.values[k])
-        #         print 'gm b: '+str(GMV.B.values[k])
-        #         print '\n'
-            #
-            # fig, ax = plt.subplots(1,2)
-            # ax[0].plot(GMV.H.values, self.Gr.z_half, 'k')
-            # ax[0].plot(self.UpdVar.H.values[0,:], self.Gr.z_half, 'r')
-            # ax[0].set_ylim([0, 6000])
-            #
-            # ax[1].plot(GMV.QT.values, self.Gr.z_half, 'k')
-            # ax[1].plot(self.UpdVar.QT.values[0,:], self.Gr.z_half, 'r')
-            # ax[1].set_ylim([0, 6000])
-            # plt.show()
-
             self.decompose_environment(GMV, 'values')
 
             if Case.casename == 'DryBubble':
@@ -561,28 +535,6 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
 
             self.EnvThermo.microphysics(self.EnvVar, self.Rain, TS.dt)
             self.initialize_covariance(GMV, Case)
-            #
-            # fig, ax = plt.subplots(1,2)
-            # ax[0].plot(GMV.H.values, self.Gr.z_half, 'k')
-            # ax[0].plot(self.UpdVar.H.values[0,:], self.Gr.z_half, 'r')
-            # ax[0].set_ylim([0, 6000])
-            #
-            # ax[1].plot(GMV.T.values, self.Gr.z_half, 'k')
-            # ax[1].plot(self.UpdVar.T.values[0,:], self.Gr.z_half, 'r')
-            # ax[1].set_ylim([0, 6000])
-            # plt.show()
-            #
-            #
-            # print '-----------'
-            # print 'env updated'
-            # for k in np.arange(self.Gr.gw, 11):
-            #     print 'k: '+str(k)
-            #     print 'upd b: '+str(self.UpdVar.B.values[0,k])
-            #     print 'env b: '+str(self.EnvVar.B.values[k])
-            #     print 'gm b: '+str(GMV.B.values[k])
-            #     print 'area weighted b: '+str(self.UpdVar.B.values[0,k]*self.UpdVar.Area.values[0,k]+
-            #     self.EnvVar.B.values[k]*self.EnvVar.Area.values[k])
-            #     print '\n'
 
             with nogil:
                 for k in xrange(self.Gr.nzg):
@@ -1619,18 +1571,6 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
                                                   -adv + exch + buoy + self.nh_pressure[i,k])/(self.Ref.rho0[k] * anew_k * dti_)
 
                         if self.UpdVar.W.new[i,k] <= 0.0:
-                            # with gil:
-                            #     print 'k: '+str(k)
-                            #     print 'w_new: '+str(self.UpdVar.W.new[i,k])
-                            #     print 'adv: '+str(-adv)
-                            #     print 'exch: '+str(exch)
-                            #     print 'b: '+str(buoy)
-                            #     print 'press: '+str(self.nh_pressure[i,k])
-                            #     print 'source: '+str(adv+exch+buoy+self.nh_pressure[i,k])
-                            #
-                            #     print 'upd b: '+str(self.UpdVar.B.values[i,k])
-                            #     print 'env b: '+str(self.EnvVar.B.values[k])
-                            #     print '\n'
                             self.UpdVar.W.new[i,k] = 0.0
                             self.UpdVar.Area.new[i,k+1] = 0.0
                             #break

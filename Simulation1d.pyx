@@ -2,7 +2,6 @@ import time
 import numpy as np
 cimport numpy as np
 from Variables cimport GridMeanVariables
-from EDMF_Updrafts cimport UpdraftVariables
 from Turbulence import ParameterizationFactory
 from Cases import CasesFactory
 cimport Grid
@@ -18,15 +17,9 @@ import matplotlib.pyplot as plt
 class Simulation1d:
 
     def __init__(self, namelist, paramlist):
-        # try:
-        #     self.n_updrafts = namelist['turbulence']['EDMF_PrognosticTKE']['updraft_number']
-        # except:
-        #     self.n_updrafts = 1
-        #     print('Turbulence--EDMF_PrognosticTKE: defaulting to single updraft')
         self.Gr = Grid.Grid(namelist)
         self.Ref = ReferenceState.ReferenceState(self.Gr)
         self.GMV = GridMeanVariables(namelist, self.Gr, self.Ref)
-        # self.UpdVar = UpdraftVariables(self.n_updrafts, namelist, paramlist, self.Gr)
         self.Case = CasesFactory(namelist, paramlist)
         self.Turb = ParameterizationFactory(namelist,paramlist, self.Gr, self.Ref)
         self.TS = TimeStepping.TimeStepping(namelist)
@@ -46,9 +39,6 @@ class Simulation1d:
 
     def run(self):
         while self.TS.t <= self.TS.t_max:
-            print self.TS.t
-            print "\n\n================== now updating =================="
-            print "sim time: "+str(self.TS.t)
             self.GMV.zero_tendencies()
             self.Case.update_surface(self.GMV, self.TS)
             self.Case.update_forcing(self.GMV, self.TS)

@@ -102,9 +102,6 @@ cdef class SurfaceFixedFlux(SurfaceBase):
 
             self.ustar = compute_ustar(self.windspeed, self.bflux, self.zrough, self.Gr.z_half[gw])
 
-        print self.ustar
-        print self.bflux
-        print vkb
         self.obukhov_length = -self.ustar *self.ustar *self.ustar /self.bflux /vkb
         self.rho_uflux = - self.Ref.rho0[gw-1] *  self.ustar * self.ustar / self.windspeed * GMV.U.values[gw]
         self.rho_vflux = - self.Ref.rho0[gw-1] *  self.ustar * self.ustar / self.windspeed * GMV.V.values[gw]

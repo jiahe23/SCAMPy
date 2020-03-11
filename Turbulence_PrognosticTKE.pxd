@@ -67,6 +67,12 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
         double [:,:] nh_pressure_adv
         double [:,:] nh_pressure_drag
         double [:,:] nh_pressure_b
+        double [:,:] aBudget_adv
+        double [:,:] aBudget_entr
+        double [:,:] aBudget_detr
+        double [:,:] wBudget_adv
+        double [:,:] wBudget_buoy
+        double [:,:] wBudget_entr_detr
         double [:,:] asp_ratio
         double [:,:] b_coeff
         double [:,:] b_mix

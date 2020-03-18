@@ -213,6 +213,7 @@ cdef class UpdraftVariables:
         ])
 
         Area_in = np.interp(self.Gr.z_half,z_in,Area_in)
+        W_in = np.interp(self.Gr.z_half,z_in,W_in)
         thetal_in = np.interp(self.Gr.z_half,z_in,thetal_in)
         T_in = np.interp(self.Gr.z_half,z_in,T_in)
 
@@ -220,14 +221,14 @@ cdef class UpdraftVariables:
             for k in xrange(self.Gr.nzg):
                 if z_in.min()<=self.Gr.z_half[k]<=z_in.max():
                     self.W.values[i,k] = 0.0
+                    # self.W.values[i,k] = W_in[k]
                     self.Area.values[i,k] = Area_in[k] #self.updraft_fraction/self.n_updrafts
                     self.H.values[i,k] = thetal_in[k]
                     self.QT.values[i,k] = 0.0
                     self.QL.values[i,k] = 0.0
 
-                    self.T.values[i,k] = T_in[k]
                     # for now temperature is provided as diagnostics from LES
-
+                    self.T.values[i,k] = T_in[k]
                     # sa = eos(
                     #     t_to_thetali_c,
                     #     eos_first_guess_thetal,

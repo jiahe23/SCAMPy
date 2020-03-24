@@ -319,7 +319,6 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
             print 'updraft initialized for Dry Bubble'
             self.UpdVar.initialize_DryBubble(GMV, Ref)
         else:
-            print 'updraft initialized for '+Case.casename
             self.UpdVar.initialize(GMV)
         return
 
@@ -1419,7 +1418,7 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
                     input.ql_up = self.UpdVar.QL.values[i,k]
                     input.ql_env = self.EnvVar.QL.values[k]
                     input.p0 = self.Ref.p0_half[k]
-                    input.alpha0 = self.Ref.alpha0_half[k]
+                    input.rho0 = self.Ref.rho0_half[k]
                     input.env_Hvar = self.EnvVar.Hvar.values[k]
                     input.env_QTvar = self.EnvVar.QTvar.values[k]
                     input.env_HQTcov = self.EnvVar.HQTcov.values[k]

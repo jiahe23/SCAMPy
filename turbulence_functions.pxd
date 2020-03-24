@@ -13,7 +13,7 @@ cdef struct chi_struct:
     double ql_mix
     double qt_mix
     double qv_
-    double alpha_mix
+    double rho_mix
     double y1
     double x1
 
@@ -43,7 +43,7 @@ cdef struct entr_in_struct:
     double ml
     double T_mean
     double p0
-    double alpha0
+    double rho0
     double T_up
     double qt_up
     double ql_up

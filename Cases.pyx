@@ -1316,8 +1316,8 @@ cdef class DYCOMS_RF01(CasesBase):
 
             # buoyancy profile
             qv = GMV.QT.values[k] - qi - GMV.QL.values[k]
-            alpha = alpha_c(Ref.p0_half[k], GMV.T.values[k], GMV.QT.values[k], qv)
-            GMV.B.values[k] = buoyancy_c(Ref.alpha0_half[k], alpha)
+            rho = rho_c(Ref.p0_half[k], GMV.T.values[k], GMV.QT.values[k], qv)
+            GMV.B.values[k] = buoyancy_c(Ref.rho0_half[k], rho)
 
             # velocity profile (geostrophic)
             GMV.U.values[k] = 7.0

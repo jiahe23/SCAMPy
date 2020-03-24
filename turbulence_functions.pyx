@@ -90,7 +90,7 @@ cdef entr_struct entr_detr_buoyancy_sorting(entr_in_struct entr_in) nogil:
 cdef buoyant_stract buoyancy_sorting_mean(entr_in_struct entr_in) nogil:
 
         cdef:
-            double qv_ ,T_env ,ql_env ,alpha_env ,b_env, T_up ,ql_up ,alpha_up ,b_up, b_mean, b_mix, qt_mix , H_mix
+            double qv_ ,T_env ,ql_env ,rho_env ,b_env, T_up ,ql_up ,rho_up ,b_up, b_mean, b_mix, qt_mix , H_mix
             double sorting_function = 0.0
             eos_struct sa
             buoyant_stract ret_b
@@ -99,15 +99,15 @@ cdef buoyant_stract buoyancy_sorting_mean(entr_in_struct entr_in) nogil:
         qv_ = entr_in.qt_env - sa.ql
         T_env = sa.T
         ql_env = sa.ql
-        alpha_env = alpha_c(entr_in.p0, sa.T, entr_in.qt_env, qv_)
-        b_env = buoyancy_c(entr_in.alpha0, alpha_env)
+        rho_env = rho_c(entr_in.p0, sa.T, entr_in.qt_env, qv_)
+        b_env = buoyancy_c(entr_in.rho0, rho_env)
 
         sa  = eos(t_to_thetali_c, eos_first_guess_thetal, entr_in.p0, entr_in.qt_up, entr_in.H_up)
         qv_ = entr_in.qt_up - sa.ql
         T_up = sa.T
         ql_up = sa.ql
-        alpha_up = alpha_c(entr_in.p0, sa.T, entr_in.qt_up, qv_)
-        b_up = buoyancy_c(entr_in.alpha0, alpha_up)
+        rho_up = rho_c(entr_in.p0, sa.T, entr_in.qt_up, qv_)
+        b_up = buoyancy_c(entr_in.rho0, rho_up)
 
         b_mean = entr_in.a_upd*b_up +  (1.0-entr_in.a_upd)*b_env
 
@@ -117,8 +117,8 @@ cdef buoyant_stract buoyancy_sorting_mean(entr_in_struct entr_in) nogil:
         H_mix =  (0.5*entr_in.H_up  + 0.5*entr_in.H_env)
         sa  = eos(t_to_thetali_c, eos_first_guess_thetal, entr_in.p0, qt_mix, H_mix)
         qv_ = (entr_in.qt_up+entr_in.qt_env)/2.0 - sa.ql
-        alpha_mix = alpha_c(entr_in.p0, sa.T, qt_mix, qv_)
-        b_mix = buoyancy_c(entr_in.alpha0, alpha_mix)-b_mean
+        rho_mix = rho_c(entr_in.p0, sa.T, qt_mix, qv_)
+        b_mix = buoyancy_c(entr_in.rho0, rho_mix)-b_mean
         sorting_function = -(b_mix)/fmax(fabs(b_up-b_env),0.0000001)
         ret_b.b_mix = b_mix
         ret_b.sorting_function = sorting_function
@@ -148,15 +148,15 @@ cdef double buoyancy_sorting(entr_in_struct entr_in) nogil:
         qv_ = entr_in.qt_env - sa.ql
         T_env = sa.T
         ql_env = sa.ql
-        alpha_env = alpha_c(entr_in.p0, sa.T, entr_in.qt_env, qv_)
-        b_env = buoyancy_c(entr_in.alpha0, alpha_env)
+        rho_env = rho_c(entr_in.p0, sa.T, entr_in.qt_env, qv_)
+        b_env = buoyancy_c(entr_in.rho0, rho_env)
 
         sa  = eos(t_to_thetali_c, eos_first_guess_thetal, entr_in.p0, entr_in.qt_up, entr_in.H_up)
         qv_ = entr_in.qt_up - sa.ql
         T_up = sa.T
         ql_up = sa.ql
-        alpha_up = alpha_c(entr_in.p0, sa.T, entr_in.qt_up, qv_)
-        b_up = buoyancy_c(entr_in.alpha0, alpha_up)
+        rho_up = rho_c(entr_in.p0, sa.T, entr_in.qt_up, qv_)
+        b_up = buoyancy_c(entr_in.rho0, rho_up)
 
         b_mean = entr_in.a_upd*b_up +  (1.0-entr_in.a_upd)*b_env
 
@@ -183,8 +183,8 @@ cdef double buoyancy_sorting(entr_in_struct entr_in) nogil:
                     qv_ = qt_hat - sa.ql
                     L_ = latent_heat(sa.T)
                     dT = L_*((entr_in.ql_up+entr_in.ql_env)/2.0- sa.ql)/1004.0
-                    alpha_mix = alpha_c(entr_in.p0, sa.T, qt_hat, qv_)
-                    bmix = buoyancy_c(entr_in.alpha0, alpha_mix) - b_mean #- entr_in.dw2dz
+                    rho_mix = rho_c(entr_in.p0, sa.T, qt_hat, qv_)
+                    bmix = buoyancy_c(entr_in.rho0, rho_mix) - b_mean #- entr_in.dw2dz
 
                     if bmix >0.0:
                         inner_sorting_function  += weights[m_h] * sqpi_inv
@@ -197,8 +197,8 @@ cdef double buoyancy_sorting(entr_in_struct entr_in) nogil:
             # condensation
             sa  = eos(t_to_thetali_c, eos_first_guess_thetal, entr_in.p0, qt_hat, h_hat)
             # calcualte buoyancy
-            alpha_mix = alpha_c(entr_in.p0, sa.T, qt_hat, qt_hat - sa.ql)
-            bmix = buoyancy_c(entr_in.alpha0, alpha_mix) - entr_in.b_mean
+            rho_mix = rho_c(entr_in.p0, sa.T, qt_hat, qt_hat - sa.ql)
+            bmix = buoyancy_c(entr_in.rho0, rho_mix) - entr_in.b_mean
             if bmix  - entr_in.dw2dz >0.0:
                 sorting_function  = 1.0
             else:

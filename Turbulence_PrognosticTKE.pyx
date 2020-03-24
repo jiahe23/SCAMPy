@@ -619,7 +619,7 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
 
         #     print 'TS.nstep: 0 =========> initilize coviance DONE'
 
-        print 'TS.t: ' + str(TS.t)
+        # print 'TS.t: ' + str(TS.t)
         self.decompose_environment(GMV, 'values')
         if self.use_steady_updrafts:
             self.compute_diagnostic_updrafts(GMV, Case)
@@ -672,8 +672,8 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
         # by differencing GMV.new and GMV.values
         ParameterizationBase.update(self, GMV, Case, TS)
 
-        print 'TS.t: '+str(TS.t)+'=========> Done'
-        print '\n'
+        # print 'TS.t: '+str(TS.t)+'=========> Done'
+        # print '\n'
 
         return
 
@@ -1541,8 +1541,13 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
         for i in xrange(self.n_updrafts):
             for k in xrange(self.Gr.gw, self.Gr.nzg-self.Gr.gw):
                 if self.UpdVar.Area.values[i,k] >= self.minimum_area:
+                    # print 'k: '+str(k)
+                    # print 'dwdz: '+str(self.updraft_dwdz[i,k])
                     if self.updraft_N2_eff[i,k] >0:
-                        fb = fmax(0.0, 1-self.updraft_N2_eff[i,k]/self.prandtl_number/2.0/self.updraft_dwdz[i,k]/self.updraft_dwdz[i,k])
+                        if fabs(self.updraft_dwdz[i,k]) < 1e-4:
+                            fb = 0.0
+                        else:
+                            fb = fmax(0.0, 1-self.updraft_N2_eff[i,k]/self.prandtl_number/2.0/self.updraft_dwdz[i,k]/self.updraft_dwdz[i,k])
                         fb = sqrt(fb)
                     self.updraft_viscosity[i,k] = (self.Smagorinsky_Lilly_coeff * dz)**2.0 *fb*sqrt(2.0*self.updraft_dwdz[i,k]**2.0)
         return

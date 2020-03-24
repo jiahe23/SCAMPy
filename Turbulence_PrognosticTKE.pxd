@@ -60,7 +60,10 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
         double dt_upd
         double constant_plume_spacing
         double aspect_ratio
+
         double Smagorinsky_Lilly_coeff
+        double buoyancy_lambda
+
         double [:,:] entr_sc
         double [:,:] detr_sc
         double [:,:] nh_pressure

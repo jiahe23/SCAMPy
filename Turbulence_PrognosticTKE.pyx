@@ -188,6 +188,14 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
             self.Smagorinsky_Lilly_coeff = 0.0
             print 'No diffusion in updraft velocity and scalar prognostic equations'
 
+        try:
+            self.buoyancy_lambda = paramlist['turbulence']['EDMF_PrognosticTKE']['buoyancy_lambda']
+            print 'buoyancy lambda = '+str(self.buoyancy_lambda)
+        except:
+            self.buoyancy_lambda = 0.5
+            print 'buoyancy_lambda is set to 0.5'
+
+
         # "Legacy" coefficients used by the steady updraft routine
         self.vel_buoy_coeff = 1.0-self.pressure_buoy_coeff
         if self.calc_tke == True:

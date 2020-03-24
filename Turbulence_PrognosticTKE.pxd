@@ -60,6 +60,7 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
         double dt_upd
         double constant_plume_spacing
         double aspect_ratio
+        double Smagorinsky_Lilly_coeff
         double [:,:] entr_sc
         double [:,:] detr_sc
         double [:,:] nh_pressure
@@ -73,6 +74,14 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
         double [:,:] wBudget_adv
         double [:,:] wBudget_buoy
         double [:,:] wBudget_entr_detr
+        double [:,:] w_diffusion
+        double [:,:] H_diffusion
+        double [:,:] QT_diffusion
+
+        double [:,:] updraft_viscosity
+        double [:,:] updraft_dwdz
+        double [:,:] updraft_N2_eff
+
         double [:,:] asp_ratio
         double [:,:] b_coeff
         double [:,:] b_mix
@@ -155,6 +164,11 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
     cpdef compute_horizontal_eddy_diffusivities(self, GridMeanVariables GMV)
     cpdef reset_surface_covariance(self, GridMeanVariables GMV, CasesBase Case)
     cpdef compute_pressure_plume_spacing(self, GridMeanVariables GMV,  CasesBase Case)
+
+    cpdef compute_velocity_scalar_diffusion(self)
+    cpdef compute_updraft_viscosity(self)
+    cpdef compute_updraft_velocity_gradient(self)
+    cpdef compute_bvf_eff(self)
     cpdef compute_nh_pressure(self)
 
     cpdef set_updraft_surface_bc(self, GridMeanVariables GMV, CasesBase Case)

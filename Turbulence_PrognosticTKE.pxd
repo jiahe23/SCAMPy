@@ -62,7 +62,6 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
         double aspect_ratio
 
         double Smagorinsky_Lilly_coeff
-        double buoyancy_lambda
 
         double [:,:] entr_sc
         double [:,:] detr_sc
@@ -82,7 +81,6 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
         double [:,:] QT_diffusion
 
         double [:,:] updraft_viscosity
-        double [:,:] updraft_dwdz
         double [:,:] updraft_N2_eff
 
         double [:,:] asp_ratio
@@ -170,7 +168,6 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
 
     cpdef compute_velocity_scalar_diffusion(self)
     cpdef compute_updraft_viscosity(self)
-    cpdef compute_updraft_velocity_gradient(self)
     cpdef compute_bvf_eff(self)
     cpdef compute_nh_pressure(self)
 

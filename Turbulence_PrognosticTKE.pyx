@@ -188,14 +188,6 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
             self.Smagorinsky_Lilly_coeff = 0.0
             print 'No diffusion in updraft velocity and scalar prognostic equations'
 
-        try:
-            self.buoyancy_lambda = paramlist['turbulence']['EDMF_PrognosticTKE']['buoyancy_lambda']
-            print 'buoyancy lambda = '+str(self.buoyancy_lambda)
-        except:
-            self.buoyancy_lambda = 0.5
-            print 'buoyancy_lambda is set to 0.5'
-
-
         # "Legacy" coefficients used by the steady updraft routine
         self.vel_buoy_coeff = 1.0-self.pressure_buoy_coeff
         if self.calc_tke == True:
@@ -263,7 +255,6 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
 
         # vars needed for diffusion calc
         self.updraft_viscosity = np.zeros((self.n_updrafts, Gr.nzg),dtype=np.double,order='c')
-        self.updraft_dwdz = np.zeros((self.n_updrafts, Gr.nzg),dtype=np.double,order='c')
         self.updraft_N2_eff = np.zeros((self.n_updrafts, Gr.nzg),dtype=np.double,order='c')
 
 
@@ -1482,14 +1473,13 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
     cpdef compute_velocity_scalar_diffusion(self):
         cdef:
             Py_ssize_t i,k
-            double w_turb_flux_half_kp = 0.0, w_turb_flux_half_k = 0.0
-            double H_turb_flux_full_km = 0.0, H_turb_flux_full_k = 0.0
-            double QT_turb_flux_full_km = 0.0, QT_turb_flux_full_k = 0.0
-            double diff_coef_full_km, diff_coef_full_k, afull_k, afull_km
+            double w_turb_flux_full_km = 0.0, w_turb_flux_full_k = 0.0
+            double H_turb_flux_half_km = 0.0, H_turb_flux_half_k = 0.0
+            double QT_turb_flux_half_km = 0.0, QT_turb_flux_half_k = 0.0
+            double visc_coef_full_km, visc_coef_full_k, diff_coef_half_km, diff_coef_half_k, afull_k, afull_km
             double dzi = self.Gr.dzi
 
-        # compute d w_i dz at half level
-        self.compute_updraft_velocity_gradient()
+
         # compute buoyancy frequency -- half level
         self.compute_bvf_eff()
         # compute viscosity from Smagorinsky-Lilly -- half level
@@ -1498,33 +1488,40 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
         # update momentum diffusion -- full level
         for i in xrange(self.n_updrafts):
             for k in xrange(self.Gr.gw, self.Gr.nzg-self.Gr.gw):
-                if self.UpdVar.Area.values[i,k] >= self.minimum_area:
-                    w_turb_flux_half_kp = (self.Ref.rho0_half[k+1]*self.UpdVar.Area.values[i,k+1]* 2.0*
-                                        self.updraft_viscosity[i,k+1]*self.updraft_dwdz[i,k+1])
-                    w_turb_flux_half_k = (self.Ref.rho0_half[k]*self.UpdVar.Area.values[i,k]* 2.0*
-                                        self.updraft_viscosity[i,k]*self.updraft_dwdz[i,k])
-                    self.w_diffusion[i,k] = (w_turb_flux_half_kp - w_turb_flux_half_k)*dzi
+                afull_k = interp2pt(self.UpdVar.Area.values[i,k+1],self.UpdVar.Area.values[i,k])
+                afull_km = interp2pt(self.UpdVar.Area.values[i,k-1],self.UpdVar.Area.values[i,k])
+                if afull_k >= self.minimum_area:
+                    visc_coef_full_k = interp2pt(self.updraft_viscosity[i,k], self.updraft_viscosity[i,k+1])
+                    visc_coef_full_km = interp2pt(self.updraft_viscosity[i,k], self.updraft_viscosity[i,k-1])
+
+                    w_turb_flux_full_k = (self.Ref.rho0[k]*afull_k* 2.0 * visc_coef_full_k *
+                                        (self.UpdVar.W.values[i,k]-self.UpdVar.W.values[i,k-1])*dzi)
+                    w_turb_flux_full_km = (self.Ref.rho0[k-1]*afull_km* 2.0 * visc_coef_full_km *
+                                        (self.UpdVar.W.values[i,k-1]-self.UpdVar.W.values[i,k-2])*dzi)
+
+                    self.w_diffusion[i,k] = (w_turb_flux_full_k - w_turb_flux_full_km)*dzi
                 else:
                     self.w_diffusion[i,k] = 0.0
 
         # update H/QT diffusion -- half level
         for i in xrange(self.n_updrafts):
             for k in xrange(self.Gr.gw, self.Gr.nzg-self.Gr.gw):
-                afull_k = interp2pt(self.UpdVar.Area.values[i,k+1],self.UpdVar.Area.values[i,k])
-                afull_km = interp2pt(self.UpdVar.Area.values[i,k-1],self.UpdVar.Area.values[i,k])
-                if afull_k >= self.minimum_area:
-                    diff_coef_full_k = interp2pt(self.updraft_viscosity[i,k], self.updraft_viscosity[i,k+1])/self.prandtl_number
-                    diff_coef_full_km = interp2pt(self.updraft_viscosity[i,k], self.updraft_viscosity[i,k-1])/self.prandtl_number
-                    H_turb_flux_full_km = (self.Ref.rho0[k-1]*afull_km* 2.0*diff_coef_full_km*
+                if self.UpdVar.Area.values[i,k] >= self.minimum_area:
+                    diff_coef_half_k = self.updraft_viscosity[i,k]/self.prandtl_number
+                    diff_coef_half_km = self.updraft_viscosity[i,k-1]/self.prandtl_number
+
+                    H_turb_flux_half_k = (self.Ref.rho0_half[k]*self.UpdVar.Area.values[i,k]* 2.0*diff_coef_half_k*
                                         (self.UpdVar.H.values[i,k] - self.UpdVar.H.values[i,k-1])*dzi )
-                    H_turb_flux_full_k = (self.Ref.rho0[k]*afull_k* 2.0*diff_coef_full_k*
-                                        (self.UpdVar.H.values[i,k+1] - self.UpdVar.H.values[i,k])*dzi )
-                    QT_turb_flux_full_km = (self.Ref.rho0[k-1]*afull_km* 2.0*diff_coef_full_km*
+                    H_turb_flux_half_km = (self.Ref.rho0_half[k-1]*self.UpdVar.Area.values[i,k-1]* 2.0*diff_coef_half_km*
+                                        (self.UpdVar.H.values[i,k-1] - self.UpdVar.H.values[i,k-2])*dzi )
+
+                    QT_turb_flux_half_k = (self.Ref.rho0_half[k]*self.UpdVar.Area.values[i,k]* 2.0*diff_coef_half_k*
                                         (self.UpdVar.QT.values[i,k] - self.UpdVar.QT.values[i,k-1])*dzi )
-                    QT_turb_flux_full_k = (self.Ref.rho0[k]*afull_k* 2.0*diff_coef_full_k*
-                                        (self.UpdVar.QT.values[i,k+1] - self.UpdVar.QT.values[i,k])*dzi )
-                    self.H_diffusion[i,k] = (H_turb_flux_full_k - H_turb_flux_full_km)*dzi
-                    self.QT_diffusion[i,k] = (QT_turb_flux_full_k - QT_turb_flux_full_km)*dzi
+                    QT_turb_flux_half_km = (self.Ref.rho0_half[k-1]*self.UpdVar.Area.values[i,k-1]* 2.0*diff_coef_half_km*
+                                        (self.UpdVar.QT.values[i,k-1] - self.UpdVar.QT.values[i,k-2])*dzi )
+
+                    self.H_diffusion[i,k] = (H_turb_flux_half_k - H_turb_flux_half_km)*dzi
+                    self.QT_diffusion[i,k] = (QT_turb_flux_half_k - QT_turb_flux_half_km)*dzi
                 else:
                     self.H_diffusion[i,k] = 0.0
                     self.QT_diffusion[i,k] = 0.0
@@ -1534,37 +1531,24 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
     cpdef compute_updraft_viscosity(self):
         cdef:
             Py_ssize_t i,k
+            double dzi = self.Gr.dzi
             double dz = self.Gr.dz
             double fb = 1.0
+            double dwdz = 0.0
 
         for i in xrange(self.n_updrafts):
             for k in xrange(self.Gr.gw, self.Gr.nzg-self.Gr.gw):
                 if self.UpdVar.Area.values[i,k] >= self.minimum_area:
-                    # print 'k: '+str(k)
-                    # print 'dwdz: '+str(self.updraft_dwdz[i,k])
+                    dwdz = (self.UpdVar.W.values[i,k]-self.UpdVar.W.values[i,k-1])*dzi
                     if self.updraft_N2_eff[i,k] >0:
-                        if fabs(self.updraft_dwdz[i,k]) < 1e-4:
+                        if fabs(dwdz) < 1e-4:
                             fb = 0.0
                         else:
-                            fb = fmax(0.0, 1-self.updraft_N2_eff[i,k]/self.prandtl_number/2.0/self.updraft_dwdz[i,k]/self.updraft_dwdz[i,k])
+                            fb = fmax(0.0, 1-self.updraft_N2_eff[i,k]/self.prandtl_number/2.0/dwdz/dwdz)
                         fb = sqrt(fb)
-                    self.updraft_viscosity[i,k] = (self.Smagorinsky_Lilly_coeff * dz)**2.0 *fb*sqrt(2.0*self.updraft_dwdz[i,k]**2.0)
-        return
-
-    cpdef compute_updraft_velocity_gradient(self):
-        cdef:
-            Py_ssize_t i,k
-            double dzi = self.Gr.dzi
-
-        for i in xrange(self.n_updrafts):
-            for k in xrange(self.Gr.nzg):
-                if self.UpdVar.Area.values[i,k] >= self.minimum_area:
-                    if k == 0:
-                        self.updraft_dwdz[i,k] = (self.UpdVar.W.values[i,k]-0.0)*dzi
                     else:
-                        self.updraft_dwdz[i,k] = (self.UpdVar.W.values[i,k]-self.UpdVar.W.values[i,k-1])*dzi
-                else:
-                    self.updraft_dwdz[i,k] = 0.0
+                        fb = 1.0
+                    self.updraft_viscosity[i,k] = (self.Smagorinsky_Lilly_coeff * dz)**2.0 *fb*sqrt(2.0*dwdz**2.0)
         return
 
     cpdef compute_bvf_eff(self):
@@ -1573,12 +1557,13 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
             double theta_virt_half_k, theta_virt_half_kp, theta_virt_half_km, d_thetav_dz_full_k, d_thetav_dz_full_km
             double ddz_thetav_dry, ddz_thetav_moist
             double tmp_LH, tmp_cpm, ql_k, T_k, qt_k, thetal_k, ddz_thetal, ddz_qt
-            double buoy_lambda = self.buoyancy_lambda
+            double buoy_lambda = 0.0
             double dzi = self.Gr.dzi
 
         for i in xrange(self.n_updrafts):
             for k in xrange(self.Gr.gw, self.Gr.nzg-self.Gr.gw):
                 if self.UpdVar.Area.values[i,k] >= self.minimum_area:
+                    buoy_lambda = self.UpdVar.cloud_fraction[k]
                     theta_virt_half_k = theta_virt_c(self.Ref.p0_half[k], self.UpdVar.T.values[i,k],
                                                     self.UpdVar.QT.values[i,k], self.UpdVar.QL.values[i,k])
 

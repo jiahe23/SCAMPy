@@ -952,8 +952,8 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
                     # l2 = vkb * z_ /(sqrt(fmax(self.EnvVar.TKE.values[self.Gr.gw],1e-4)/ustar/ustar)*self.tke_ed_coeff) * fmin(
                     #  (1.0 - 100.0 * z_/obukhov_length)**0.2, 1.0/vkb )
                 else: # neutral or stable
-                    l2 = vkb * z_ /(sqrt(self.EnvVar.TKE.values[self.Gr.gw]/ustar/ustar)*self.tke_ed_coeff)
-                    # l2 = vkb * z_ /(sqrt(fmax(self.EnvVar.TKE.values[self.Gr.gw],1e-4)/ustar/ustar)*self.tke_ed_coeff)
+                    # l2 = vkb * z_ /(sqrt(self.EnvVar.TKE.values[self.Gr.gw]/ustar/ustar)*self.tke_ed_coeff)
+                    l2 = vkb * z_ /(sqrt(fmax(self.EnvVar.TKE.values[self.Gr.gw],1e-4)/ustar/ustar)*self.tke_ed_coeff)
 
                 # Buoyancy-shear-subdomain exchange-dissipation TKE equilibrium scale
                 shear2 = pow((GMV.U.values[k+1] - GMV.U.values[k-1]) * 0.5 * self.Gr.dzi, 2) + \

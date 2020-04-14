@@ -222,8 +222,8 @@ cdef class UpdraftVariables:
                 if z_in.min()<=self.Gr.z_half[k]<=z_in.max():
                     self.W.values[i,k] = 0.0
                     # self.W.values[i,k] = W_in[k]
-                    # self.Area.values[i,k] = Area_in[k] #self.updraft_fraction/self.n_updrafts
-                    self.Area.values[i,k] = Area_in[k]*0.1
+                    self.Area.values[i,k] = Area_in[k] #self.updraft_fraction/self.n_updrafts
+                    # self.Area.values[i,k] = Area_in[k]*0.1
                     self.H.values[i,k] = thetal_in[k]
                     self.QT.values[i,k] = 0.0
                     self.QL.values[i,k] = 0.0

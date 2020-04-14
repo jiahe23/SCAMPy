@@ -66,6 +66,7 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
         double [:,:] entr_sc
         double [:,:] detr_sc
         double [:,:] nh_pressure
+        double [:,:] wbuoy
         double [:,:] sorting_function
         double [:,:] nh_pressure_adv
         double [:,:] nh_pressure_drag
@@ -169,6 +170,9 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
     cpdef compute_velocity_scalar_diffusion(self)
     cpdef compute_updraft_viscosity(self)
     cpdef compute_bvf_eff(self)
+
+    cpdef read_DryBubble_LESdpdz(self, TimeStepping TS)
+    cpdef read_DryBubble_LESbuoy(self, TimeStepping TS)
     cpdef compute_nh_pressure(self)
 
     cpdef set_updraft_surface_bc(self, GridMeanVariables GMV, CasesBase Case)

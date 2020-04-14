@@ -3,6 +3,7 @@
 #cython: wraparound=False
 #cython: initializedcheck=True
 #cython: cdivision=False
+import netCDF4 as nc
 
 import numpy as np
 include "parameters.pxi"
@@ -234,6 +235,7 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
 
         # Pressure term in updraft vertical momentum equation
         self.nh_pressure = np.zeros((self.n_updrafts, Gr.nzg),dtype=np.double,order='c')
+        self.wbuoy = np.zeros((self.n_updrafts, Gr.nzg),dtype=np.double,order='c')
         self.nh_pressure_b = np.zeros((self.n_updrafts, Gr.nzg),dtype=np.double,order='c')
         self.nh_pressure_adv = np.zeros((self.n_updrafts, Gr.nzg),dtype=np.double,order='c')
         self.nh_pressure_drag = np.zeros((self.n_updrafts, Gr.nzg),dtype=np.double,order='c')
@@ -614,6 +616,7 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
         if self.use_steady_updrafts:
             self.compute_diagnostic_updrafts(GMV, Case)
         else:
+            print 'Time in the update(): '+str(TS.t)
             self.compute_prognostic_updrafts(GMV, Case, TS)
 
         # TODO -maybe not needed? - both diagnostic and prognostic updrafts end with decompose_environment
@@ -682,12 +685,16 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
 
         self.UpdThermo.clear_precip_sources()
 
+        print 'Time in the compute_prognostic_updrafts: '+str(TS.t)
+
         while time_elapsed < TS.dt:
             self.compute_entrainment_detrainment(GMV, Case)
             if self.turbulent_entrainment_factor > 1.0e-6:
                 self.compute_horizontal_eddy_diffusivities(GMV)
                 self.compute_turbulent_entrainment(GMV,Case)
-            self.compute_nh_pressure()
+            # self.compute_nh_pressure()
+            self.read_DryBubble_LESdpdz(TS)
+            self.read_DryBubble_LESbuoy(TS)
             self.compute_velocity_scalar_diffusion()
             self.solve_updraft_velocity_area()
             self.solve_updraft_scalars(GMV)
@@ -1597,6 +1604,58 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
 
         return
 
+    cpdef read_DryBubble_LESdpdz(self, TimeStepping TS):
+
+        lesdata = nc.Dataset('/Users/jiahe/Documents/pycles_data/Output.DryBubble.WTDC/data4scm/bmask_stats.nc','r')
+        tles = lesdata.variables['t'][:].data
+        zfles = lesdata.variables['z_full'][:].data
+
+        # tidx = np.where(tles==TS.t)[0]
+        if TS.t<60:
+            tidx = np.where(tles==60)[0]
+        else:
+            tidx = np.where(tles==TS.t)[0]
+        pz = lesdata.variables['upd_wBudget_pz'][:].data
+        print 'Time in the read LES pz: '+str(TS.t)
+        for i in xrange(self.n_updrafts):
+            for k in xrange(self.Gr.gw, self.Gr.nzg-self.Gr.gw):
+                zidx = np.where(zfles==self.Gr.z)[0]
+                a_kfull = interp2pt(self.UpdVar.Area.values[i,k], self.UpdVar.Area.values[i,k+1])
+                if a_kfull >= self.minimum_area:
+                    self.nh_pressure[i,k] = pz[tidx, k]
+                else:
+                    self.nh_pressure[i,k] = 0.0
+
+                if np.isnan(self.nh_pressure[i,k]):
+                    self.nh_pressure[i,k] = 0.0
+
+        return
+    cpdef read_DryBubble_LESbuoy(self, TimeStepping TS):
+
+        lesdata = nc.Dataset('/Users/jiahe/Documents/pycles_data/Output.DryBubble.WTDC/data4scm/bmask_stats.nc','r')
+        tles = lesdata.variables['t'][:].data
+        zfles = lesdata.variables['z_full'][:].data
+
+        # tidx = np.where(tles==TS.t)[0]
+        if TS.t<60:
+            tidx = np.where(tles==60)[0]
+        else:
+            tidx = np.where(tles==TS.t)[0]
+        buoy = lesdata.variables['upd_wBudget_buoy'][:].data
+        print 'Time in the read LES pz: '+str(TS.t)
+        for i in xrange(self.n_updrafts):
+            for k in xrange(self.Gr.gw, self.Gr.nzg-self.Gr.gw):
+                zidx = np.where(zfles==self.Gr.z)[0]
+                a_kfull = interp2pt(self.UpdVar.Area.values[i,k], self.UpdVar.Area.values[i,k+1])
+                if a_kfull >= self.minimum_area:
+                    self.wbuoy[i,k] = buoy[tidx, k]
+                else:
+                    self.wbuoy[i,k] = 0.0
+
+                if np.isnan(self.wbuoy[i,k]):
+                    self.wbuoy[i,k] = 0.0
+
+        return
 
     cpdef compute_nh_pressure(self):
         cdef:
@@ -1756,6 +1815,13 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
                     rho_ratio = self.Ref.rho0[k-1]/self.Ref.rho0[k]
                     anew_k = interp2pt(self.UpdVar.Area.new[i,k], self.UpdVar.Area.new[i,k+1])
 
+                    # with gil:
+                    #     print 'k= '+str(k)+', aknew at k: '+str(self.UpdVar.Area.new[i,k])+', aknew at k+1: '+str(self.UpdVar.Area.new[i,k+1])
+
+                    with gil:
+                        if self.UpdVar.Area.new[i,k+1]>0.0:
+                            print 'k= '+str(k)+', aknew at k: '+str(self.UpdVar.Area.new[i,k])+', aknew at k+1: '+str(self.UpdVar.Area.new[i,k+1])
+
                     if anew_k >= self.minimum_area:
                         a_k = interp2pt(self.UpdVar.Area.values[i,k], self.UpdVar.Area.values[i,k+1])
                         a_km = interp2pt(self.UpdVar.Area.values[i,k-1], self.UpdVar.Area.values[i,k])
@@ -1767,9 +1833,13 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
                                - self.Ref.rho0[k-1] * a_km * self.UpdVar.W.values[i,k-1] * self.UpdVar.W.values[i,k-1] * dzi)
                         exch = (self.Ref.rho0[k] * a_k * self.UpdVar.W.values[i,k]
                                 * (entr_w * self.EnvVar.W.values[k] - detr_w * self.UpdVar.W.values[i,k] ) + self.turb_entr_W[i,k])
-                        buoy= self.Ref.rho0[k] * a_k * B_k
+                        # buoy= self.Ref.rho0[k] * a_k * B_k
+                        buoy=self.wbuoy[i,k]
                         self.UpdVar.W.new[i,k] = (self.Ref.rho0[k] * a_k * self.UpdVar.W.values[i,k] * dti_
                                                   -adv + exch + buoy + self.nh_pressure[i,k] +self.w_diffusion[i,k])/(self.Ref.rho0[k] * anew_k * dti_)
+
+                        # with gil:
+                        #     print 'k= '+str(k)+', w new at k: '+str(self.UpdVar.W.new[i,k])+', adv:'+str(adv)+', exch:'+str(exch)+', buoy:'+str(buoy)+', press:'+str(self.nh_pressure[i,k])
 
                         if self.UpdVar.W.new[i,k] <= 0.0:
                             self.UpdVar.W.new[i,k] = 0.0
@@ -1785,6 +1855,9 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
                         self.UpdVar.Area.new[i,k+1] = 0.0
                         # keep this in mind if we modify updraft top treatment!
                         #break
+                    #
+                    # with gil:
+                    #     print 'k= '+str(k)+', aknew at k+1: '+str(self.UpdVar.Area.new[i,k+1])
 
 
         return

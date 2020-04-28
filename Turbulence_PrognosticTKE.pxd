@@ -68,6 +68,24 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
         double [:,:] nh_pressure_adv
         double [:,:] nh_pressure_drag
         double [:,:] nh_pressure_b
+
+        # vars below are used to archive LES profiles so that can run scm with prescribed profile
+        double [:,:] wbuoy
+        double [:,:] wdpdz
+        double [:,:] wexch
+        double [:,:] aexch
+        double [:,:] aunew
+        double [:,:] wunew
+
+        # vars below archive source/sink terms in area and velocity budget in scm simulation
+        double [:,:] aBudget_adv
+        double [:,:] aBudget_entr
+        double [:,:] aBudget_detr
+        double [:,:] wBudget_adv
+        double [:,:] wBudget_buoy
+        double [:,:] wBudget_entr
+        double [:,:] wBudget_detr
+
         double [:,:] asp_ratio
         double [:,:] b_coeff
         double [:,:] b_mix
@@ -198,3 +216,5 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
 
     cdef void GMV_third_m(self, VariableDiagnostic Gmv_third_m, EDMF_Environment.EnvironmentVariable_2m env_covar,
                            EDMF_Environment.EnvironmentVariable  env_mean, EDMF_Updrafts.UpdraftVariable  upd_mean)
+
+    cpdef read_DryBubble_LESprofile(self, TimeStepping TS)

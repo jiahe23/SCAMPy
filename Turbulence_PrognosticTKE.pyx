@@ -4,6 +4,8 @@
 #cython: initializedcheck=True
 #cython: cdivision=False
 
+import netCDF4 as nc
+
 import numpy as np
 include "parameters.pxi"
 import cython
@@ -231,6 +233,23 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
         self.asp_ratio = np.zeros((self.n_updrafts, Gr.nzg),dtype=np.double,order='c')
         self.b_coeff = np.zeros((self.n_updrafts, Gr.nzg),dtype=np.double,order='c')
 
+        # vars to archive LES profiles
+        self.wbuoy = np.zeros((self.n_updrafts, Gr.nzg),dtype=np.double,order='c')
+        self.wdpdz = np.zeros((self.n_updrafts, Gr.nzg),dtype=np.double,order='c')
+        self.wexch = np.zeros((self.n_updrafts, Gr.nzg),dtype=np.double,order='c')
+        self.aexch = np.zeros((self.n_updrafts, Gr.nzg),dtype=np.double,order='c')
+        self.aunew = np.zeros((self.n_updrafts, Gr.nzg),dtype=np.double,order='c')
+        self.wunew = np.zeros((self.n_updrafts, Gr.nzg),dtype=np.double,order='c')
+
+        # source/sinks for a/w equations
+        self.aBudget_adv = np.zeros((self.n_updrafts, Gr.nzg),dtype=np.double,order='c')
+        self.aBudget_entr = np.zeros((self.n_updrafts, Gr.nzg),dtype=np.double,order='c')
+        self.aBudget_detr = np.zeros((self.n_updrafts, Gr.nzg),dtype=np.double,order='c')
+        self.wBudget_adv = np.zeros((self.n_updrafts, Gr.nzg),dtype=np.double,order='c')
+        self.wBudget_buoy = np.zeros((self.n_updrafts, Gr.nzg),dtype=np.double,order='c')
+        self.wBudget_entr = np.zeros((self.n_updrafts, Gr.nzg),dtype=np.double,order='c')
+        self.wBudget_detr = np.zeros((self.n_updrafts, Gr.nzg),dtype=np.double,order='c')
+
         # Mass flux
         self.m = np.zeros((self.n_updrafts, Gr.nzg),dtype=np.double, order='c')
 
@@ -335,6 +354,16 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
         Stats.add_profile('mixing_length_ratio')
         Stats.add_profile('entdet_balance_length')
         Stats.add_profile('interdomain_tke_t')
+
+        # sink/source terms in the area and w equation
+        Stats.add_profile('wBudget_adv')
+        Stats.add_profile('wBudget_buoy')
+        Stats.add_profile('wBudget_entr')
+        Stats.add_profile('wBudget_detr')
+        Stats.add_profile('aBudget_adv')
+        Stats.add_profile('aBudget_entr')
+        Stats.add_profile('aBudget_detr')
+
         if self.calc_tke:
             Stats.add_profile('tke_buoy')
             Stats.add_profile('tke_dissipation')
@@ -394,6 +423,14 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
             double [:] mean_sorting_function = np.zeros((self.Gr.nzg,), dtype=np.double, order='c')
             double [:] mean_b_mix = np.zeros((self.Gr.nzg,), dtype=np.double, order='c')
 
+            double [:] mean_aBudget_adv = np.zeros((self.Gr.nzg,), dtype=np.double, order='c')
+            double [:] mean_aBudget_entr = np.zeros((self.Gr.nzg,), dtype=np.double, order='c')
+            double [:] mean_aBudget_detr = np.zeros((self.Gr.nzg,), dtype=np.double, order='c')
+            double [:] mean_wBudget_adv = np.zeros((self.Gr.nzg,), dtype=np.double, order='c')
+            double [:] mean_wBudget_buoy = np.zeros((self.Gr.nzg,), dtype=np.double, order='c')
+            double [:] mean_wBudget_entr = np.zeros((self.Gr.nzg,), dtype=np.double, order='c')
+            double [:] mean_wBudget_detr = np.zeros((self.Gr.nzg,), dtype=np.double, order='c')
+
         self.UpdVar.io(Stats, self.Ref)
         self.EnvVar.io(Stats, self.Ref)
         self.Rain.io(Stats, self.Ref, self.UpdThermo, self.EnvThermo, TS)
@@ -416,6 +453,14 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
                         mean_nh_pressure_drag[k] += self.UpdVar.Area.values[i,k] * self.nh_pressure_drag[i,k]/self.UpdVar.Area.bulkvalues[k]
                         mean_asp_ratio[k] += self.UpdVar.Area.values[i,k] * self.asp_ratio[i,k]/self.UpdVar.Area.bulkvalues[k]
                         mean_b_coeff[k] += self.UpdVar.Area.values[i,k] * self.b_coeff[i,k]/self.UpdVar.Area.bulkvalues[k]
+
+                        mean_aBudget_adv[k] += self.UpdVar.Area.values[i,k] * self.aBudget_adv[i,k]/self.UpdVar.Area.bulkvalues[k]
+                        mean_aBudget_entr[k] += self.UpdVar.Area.values[i,k] * self.aBudget_entr[i,k]/self.UpdVar.Area.bulkvalues[k]
+                        mean_aBudget_detr[k] += self.UpdVar.Area.values[i,k] * self.aBudget_detr[i,k]/self.UpdVar.Area.bulkvalues[k]
+                        mean_wBudget_adv[k] += self.UpdVar.Area.values[i,k] * self.wBudget_adv[i,k]/self.UpdVar.Area.bulkvalues[k]
+                        mean_wBudget_buoy[k] += self.UpdVar.Area.values[i,k] * self.wBudget_buoy[i,k]/self.UpdVar.Area.bulkvalues[k]
+                        mean_wBudget_entr[k] += self.UpdVar.Area.values[i,k] * self.wBudget_entr[i,k]/self.UpdVar.Area.bulkvalues[k]
+                        mean_wBudget_detr[k] += self.UpdVar.Area.values[i,k] * self.wBudget_detr[i,k]/self.UpdVar.Area.bulkvalues[k]
 
                         mean_frac_turb_entr_full[k] += self.UpdVar.Area.values[i,k] * self.frac_turb_entr_full[i,k]/self.UpdVar.Area.bulkvalues[k]
                         mean_frac_turb_entr[k] += self.UpdVar.Area.values[i,k] * self.frac_turb_entr[i,k]/self.UpdVar.Area.bulkvalues[k]
@@ -469,6 +514,15 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
         Stats.write_profile('mixing_length_ratio', self.ml_ratio[kmin:kmax])
         Stats.write_profile('entdet_balance_length', self.l_entdet[kmin:kmax])
         Stats.write_profile('interdomain_tke_t', self.b[kmin:kmax])
+
+        Stats.write_profile('aBudget_adv', mean_aBudget_adv[self.Gr.gw:self.Gr.nzg-self.Gr.gw])
+        Stats.write_profile('aBudget_entr', mean_aBudget_entr[self.Gr.gw:self.Gr.nzg-self.Gr.gw])
+        Stats.write_profile('aBudget_detr', mean_aBudget_detr[self.Gr.gw:self.Gr.nzg-self.Gr.gw])
+        Stats.write_profile('wBudget_adv', mean_wBudget_adv[self.Gr.gw:self.Gr.nzg-self.Gr.gw])
+        Stats.write_profile('wBudget_buoy', mean_wBudget_buoy[self.Gr.gw:self.Gr.nzg-self.Gr.gw])
+        Stats.write_profile('wBudget_entr', mean_wBudget_entr[self.Gr.gw:self.Gr.nzg-self.Gr.gw])
+        Stats.write_profile('wBudget_detr', mean_wBudget_detr[self.Gr.gw:self.Gr.nzg-self.Gr.gw])
+
         if self.calc_tke:
             self.compute_covariance_dissipation(self.EnvVar.TKE)
             Stats.write_profile('tke_dissipation', self.EnvVar.TKE.dissipation[kmin:kmax])
@@ -615,6 +669,9 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
                 self.compute_horizontal_eddy_diffusivities(GMV)
                 self.compute_turbulent_entrainment(GMV,Case)
             self.compute_nh_pressure()
+
+            self.read_DryBubble_LESprofile(TS)
+
             self.solve_updraft_velocity_area()
             self.solve_updraft_scalars(GMV)
             self.UpdThermo.microphysics(self.UpdVar, self.Rain, TS.dt) # causes division error in dry bubble first time step
@@ -876,7 +933,8 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
                     l2 = vkb * z_ /(sqrt(self.EnvVar.TKE.values[self.Gr.gw]/ustar/ustar)*self.tke_ed_coeff) * fmin(
                      (1.0 - 100.0 * z_/obukhov_length)**0.2, 1.0/vkb )
                 else: # neutral or stable
-                    l2 = vkb * z_ /(sqrt(self.EnvVar.TKE.values[self.Gr.gw]/ustar/ustar)*self.tke_ed_coeff)
+                    # l2 = vkb * z_ /(sqrt(self.EnvVar.TKE.values[self.Gr.gw]/ustar/ustar)*self.tke_ed_coeff)
+                    l2 = vkb * z_ /(sqrt(fmax(self.EnvVar.TKE.values[self.Gr.gw],1e-4)/ustar/ustar)*self.tke_ed_coeff)
 
                 # Buoyancy-shear-subdomain exchange-dissipation TKE equilibrium scale
                 shear2 = pow((GMV.U.values[k+1] - GMV.U.values[k-1]) * 0.5 * self.Gr.dzi, 2) + \
@@ -1405,6 +1463,81 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
                 self.pressure_plume_spacing[i] = fmax(self.aspect_ratio*self.UpdVar.updraft_top[i], 500.0*self.aspect_ratio)
         return
 
+    cpdef read_DryBubble_LESprofile(self, TimeStepping TS):
+
+        lesdata = nc.Dataset('/Users/jiahe/Documents/pycles_data/Output.DryBubble.WTDC2/data4scm/bmask_stats.nc','r')
+        tles = lesdata.variables['t'][:].data
+        zfles = lesdata.variables['z_full'][:].data
+        zhles = lesdata.variables['z_half'][:].data
+
+        if TS.t<10:
+            tidx = np.where(tles==10)[0]
+        else:
+            tidx = np.where(tles==TS.t)[0]
+
+        # read profiles for wBudget
+        pz = lesdata.variables['upd_wBudget_pz'][:].data
+        whor = lesdata.variables['upd_wBudget_whor'][:].data
+        buoy = lesdata.variables['upd_wBudget_buoy'][:].data
+        exch = lesdata.variables['upd_wBudget_exch'][:].data
+        for i in xrange(self.n_updrafts):
+            for k in xrange(self.Gr.gw, self.Gr.nzg-self.Gr.gw):
+                zidx = np.where(zfles==self.Gr.z[k])[0]
+                a_kfull = interp2pt(self.UpdVar.Area.values[i,k], self.UpdVar.Area.values[i,k+1])
+                if a_kfull >= self.minimum_area:
+                    self.wdpdz[i,k] = pz[tidx, zidx]+whor[tidx, zidx]
+                    self.wbuoy[i,k] = buoy[tidx, zidx]
+                    self.wexch[i,k] = exch[tidx, zidx]
+                else:
+                    self.wdpdz[i,k] = 0.0
+                    self.wbuoy[i,k] = 0.0
+                    self.wexch[i,k] = 0.0
+
+                if np.isnan(self.wdpdz[i,k]):
+                    self.wdpdz[i,k] = 0.0
+                if np.isnan(self.wbuoy[i,k]):
+                    self.wbuoy[i,k] = 0.0
+                if np.isnan(self.wexch[i,k]):
+                    self.wexch[i,k] = 0.0
+
+        # read the exch profile for area fraction
+        exch = lesdata.variables['upd_aBudget_exch'][:].data
+        for i in xrange(self.n_updrafts):
+            for k in xrange(self.Gr.gw, self.Gr.nzg-self.Gr.gw):
+                zidx = np.where(zhles==self.Gr.z_half[k])[0]
+                if self.UpdVar.Area.values[i,k] >= self.minimum_area:
+                    self.aexch[i,k] = exch[tidx, zidx]
+                else:
+                    self.aexch[i,k] = 0.0
+
+                if np.isnan(self.aexch[i,k]):
+                    self.aexch[i,k] = 0.
+
+        # read the profiles for 'new'
+        tsnew = TS.t + TS.dt
+        if tsnew <= tles.max():
+
+            tidx = np.where(tles==tsnew)[0]
+            aunew = lesdata.variables['upd_area'][:].data
+            for i in xrange(self.n_updrafts):
+                for k in xrange(self.Gr.gw, self.Gr.nzg-self.Gr.gw):
+                    zidx = np.where(zhles==self.Gr.z_half[k])[0]
+                    self.aunew[i,k] = aunew[tidx, zidx]
+
+                    if np.isnan(self.aunew[i,k]):
+                        self.aunew[i,k] = 0.0
+
+            wunew = lesdata.variables['upd_w'][:].data
+            for i in xrange(self.n_updrafts):
+                for k in xrange(self.Gr.gw, self.Gr.nzg-self.Gr.gw):
+                    zidx = np.where(zfles==self.Gr.z[k])[0]
+                    self.wunew[i,k] = wunew[tidx, zidx]
+
+                    if np.isnan(self.wunew[i,k]):
+                        self.wunew[i,k] = 0.0
+
+        return
+
     cpdef compute_nh_pressure(self):
         cdef:
             Py_ssize_t i,k, alen
@@ -1550,7 +1683,8 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
                     entr_term = self.UpdVar.Area.values[i,k+1] * whalf_kp * (self.entr_sc[i,k+1] )
                     detr_term = self.UpdVar.Area.values[i,k+1] * whalf_kp * (- self.detr_sc[i,k+1])
 
-                    self.UpdVar.Area.new[i,k+1]  = fmax(dt_ * (adv + entr_term + detr_term) + self.UpdVar.Area.values[i,k+1], 0.0)
+                    # self.UpdVar.Area.new[i,k+1]  = fmax(dt_ * (adv + entr_term + detr_term) + self.UpdVar.Area.values[i,k+1], 0.0)
+                    self.UpdVar.Area.new[i,k+1]  = fmax(dt_ * (adv + self.aexch[i,k+1]) + self.UpdVar.Area.values[i,k+1], 0.0)
 
                     if self.UpdVar.Area.new[i,k+1] > au_lim:
                         self.UpdVar.Area.new[i,k+1] = au_lim
@@ -1559,6 +1693,10 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
                         else:
                             # this detrainment rate won't affect scalars but would affect velocity
                             self.detr_sc[i,k+1] = (((au_lim-self.UpdVar.Area.values[i,k+1])* dti_ - adv -entr_term)/(-au_lim  * whalf_kp))
+
+                    self.aBudget_adv[i,k+1] = adv
+                    self.aBudget_entr[i,k+1] = entr_term
+                    self.aBudget_detr[i,k+1] = detr_term
 
                     # Now solve for updraft velocity at k
                     rho_ratio = self.Ref.rho0[k-1]/self.Ref.rho0[k]
@@ -1576,13 +1714,23 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
                         exch = (self.Ref.rho0[k] * a_k * self.UpdVar.W.values[i,k]
                                 * (entr_w * self.EnvVar.W.values[k] - detr_w * self.UpdVar.W.values[i,k] ) + self.turb_entr_W[i,k])
                         buoy= self.Ref.rho0[k] * a_k * B_k
+                        # self.UpdVar.W.new[i,k] = (self.Ref.rho0[k] * a_k * self.UpdVar.W.values[i,k] * dti_
+                        #                           -adv + exch + buoy + self.nh_pressure[i,k])/(self.Ref.rho0[k] * anew_k * dti_)
                         self.UpdVar.W.new[i,k] = (self.Ref.rho0[k] * a_k * self.UpdVar.W.values[i,k] * dti_
-                                                  -adv + exch + buoy + self.nh_pressure[i,k])/(self.Ref.rho0[k] * anew_k * dti_)
+                                                  -adv + self.wexch[i,k] + self.wbuoy[i,k] + self.wdpdz[i,k])/(self.Ref.rho0[k] * anew_k * dti_)
+
+                        # self.UpdVar.W.new[i,k] = self.wunew[i,k]
 
                         if self.UpdVar.W.new[i,k] <= 0.0:
                             self.UpdVar.W.new[i,k] = 0.0
                             self.UpdVar.Area.new[i,k+1] = 0.0
                             #break
+
+                        self.wBudget_adv[i,k] = -adv
+                        self.wBudget_buoy[i,k] = buoy
+                        self.wBudget_entr[i,k] = self.Ref.rho0[k] * a_k * self.UpdVar.W.values[i,k] * entr_w * self.EnvVar.W.values[k]
+                        self.wBudget_detr[i,k] = self.Ref.rho0[k] * a_k * self.UpdVar.W.values[i,k] * (-detr_w * self.UpdVar.W.values[i,k])
+
                     else:
                         self.UpdVar.W.new[i,k] = 0.0
                         self.UpdVar.Area.new[i,k+1] = 0.0

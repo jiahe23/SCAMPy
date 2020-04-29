@@ -158,6 +158,10 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
         self.entrainment_scale = paramlist['turbulence']['EDMF_PrognosticTKE']['entrainment_scale']
         self.constant_plume_spacing = paramlist['turbulence']['EDMF_PrognosticTKE']['constant_plume_spacing']
         self.detrainment_factor = paramlist['turbulence']['EDMF_PrognosticTKE']['detrainment_factor']
+        try:
+            self.divergence_factor = paramlist['turbulence']['EDMF_PrognosticTKE']['divergence_factor']
+        except:
+            self.divergence_factor = 0.0
         self.sorting_power = paramlist['turbulence']['EDMF_PrognosticTKE']['sorting_power']
         self.turbulent_entrainment_factor = paramlist['turbulence']['EDMF_PrognosticTKE']['turbulent_entrainment_factor']
         self.pressure_buoy_coeff = paramlist['turbulence']['EDMF_PrognosticTKE']['pressure_buoy_coeff']
@@ -1370,6 +1374,7 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
         input.sort_pow = self.sorting_power
         input.c_ent = self.entrainment_factor
         input.c_det = self.detrainment_factor
+        input.c_div = self.divergence_factor
         input.c_mu = self.entrainment_sigma
         input.c_mu0 = self.entrainment_scale
         input.c_ed_mf = self.entrainment_ed_mf_sigma
@@ -1716,10 +1721,10 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
                         buoy= self.Ref.rho0[k] * a_k * B_k
                         # self.UpdVar.W.new[i,k] = (self.Ref.rho0[k] * a_k * self.UpdVar.W.values[i,k] * dti_
                         #                           -adv + exch + buoy + self.nh_pressure[i,k])/(self.Ref.rho0[k] * anew_k * dti_)
-                        self.UpdVar.W.new[i,k] = (self.Ref.rho0[k] * a_k * self.UpdVar.W.values[i,k] * dti_
-                                                  -adv + self.wexch[i,k] + self.wbuoy[i,k] + self.wdpdz[i,k])/(self.Ref.rho0[k] * anew_k * dti_)
+                        # self.UpdVar.W.new[i,k] = (self.Ref.rho0[k] * a_k * self.UpdVar.W.values[i,k] * dti_
+                        #                           -adv + self.wexch[i,k] + self.wbuoy[i,k] + self.wdpdz[i,k])/(self.Ref.rho0[k] * anew_k * dti_)
 
-                        # self.UpdVar.W.new[i,k] = self.wunew[i,k]
+                        self.UpdVar.W.new[i,k] = self.wunew[i,k]
 
                         if self.UpdVar.W.new[i,k] <= 0.0:
                             self.UpdVar.W.new[i,k] = 0.0

@@ -18,6 +18,7 @@ cdef struct chi_struct:
     double x1
 
 cdef struct entr_in_struct:
+    double c_div
     double zi
     double wstar
     double z

@@ -89,9 +89,11 @@ cdef entr_struct entr_detr_env_moisture_deficit(entr_in_struct entr_in) nogil:
 
     dw   = entr_in.w_upd - entr_in.w_env
     if dw < 0.0:
-        dw -= 0.001
+        dw -= 0.01
+        # dw -= 0.001
     else:
-        dw += 0.001
+        dw += 0.01
+        # dw += 0.001
 
     db = (entr_in.b_upd - entr_in.b_env)
     mu = entr_in.c_mu/entr_in.c_mu0
@@ -108,11 +110,11 @@ cdef entr_struct entr_detr_env_moisture_deficit(entr_in_struct entr_in) nogil:
         l[0] = entr_in.tke_coef*fabs(db/sqrt(entr_in.tke+1e-8))
         l[1] = fabs(db/dw)
         inv_timescale = lamb_smooth_minimum(l, 0.1, 0.0005)
-    # _ret.entr_sc = inv_timescale/dw*(entr_in.c_ent*logistic_e + c_det*moisture_deficit_e) + entr_wdwdz
-    # _ret.detr_sc = inv_timescale/dw*(entr_in.c_ent*logistic_d + c_det*moisture_deficit_d) + detr_wdwdz
+    # _ret.entr_sc = inv_timescale/dw*(entr_in.c_ent*logistic_e + c_det*moisture_deficit_e)
+    # _ret.detr_sc = inv_timescale/dw*(entr_in.c_ent*logistic_d + c_det*moisture_deficit_d)
 
-    _ret.entr_sc = entr_wdwdz * entr_in.c_div
-    _ret.detr_sc = detr_wdwdz * entr_in.c_div
+    _ret.entr_sc = entr_wdwdz * entr_in.c_entdiv
+    _ret.detr_sc = detr_wdwdz * entr_in.c_detdiv
 
     return _ret
 

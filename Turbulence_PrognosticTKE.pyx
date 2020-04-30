@@ -678,7 +678,7 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
                 self.compute_turbulent_entrainment(GMV,Case)
             self.compute_nh_pressure()
 
-            self.read_DryBubble_LESprofile(TS)
+            # self.read_DryBubble_LESprofile(TS)
 
             self.solve_updraft_velocity_area()
             self.solve_updraft_scalars(GMV)
@@ -941,8 +941,7 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
                     l2 = vkb * z_ /(sqrt(self.EnvVar.TKE.values[self.Gr.gw]/ustar/ustar)*self.tke_ed_coeff) * fmin(
                      (1.0 - 100.0 * z_/obukhov_length)**0.2, 1.0/vkb )
                 else: # neutral or stable
-                    # l2 = vkb * z_ /(sqrt(self.EnvVar.TKE.values[self.Gr.gw]/ustar/ustar)*self.tke_ed_coeff)
-                    l2 = vkb * z_ /(sqrt(fmax(self.EnvVar.TKE.values[self.Gr.gw],1e-4)/ustar/ustar)*self.tke_ed_coeff)
+                    l2 = vkb * z_ /(sqrt(self.EnvVar.TKE.values[self.Gr.gw]/ustar/ustar)*self.tke_ed_coeff)
 
                 # Buoyancy-shear-subdomain exchange-dissipation TKE equilibrium scale
                 shear2 = pow((GMV.U.values[k+1] - GMV.U.values[k-1]) * 0.5 * self.Gr.dzi, 2) + \
@@ -1393,10 +1392,7 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
                 if self.UpdVar.Area.values[i,k]>0.0:
                     input.b_upd = self.UpdVar.B.values[i,k]
                     input.w_upd = interp2pt(self.UpdVar.W.values[i,k],self.UpdVar.W.values[i,k-1])
-                    if self.UpdVar.W.values[i,k-1] < 1e-4:
-                        input.dwdz = 0.0
-                    else:
-                        input.dwdz = (self.UpdVar.W.values[i,k]-self.UpdVar.W.values[i,k-1])/self.Gr.dz
+                    input.dwdz = (self.UpdVar.W.values[i,k]-self.UpdVar.W.values[i,k-1])/self.Gr.dz
                     input.z = self.Gr.z_half[k]
                     input.a_upd = self.UpdVar.Area.values[i,k]
                     input.a_env = 1.0-self.UpdVar.Area.bulkvalues[k]
@@ -1559,7 +1555,6 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
             input.updraft_top = self.UpdVar.updraft_top[i]
             alen = len(np.argwhere(self.UpdVar.Area.values[i,self.Gr.gw:self.Gr.nzg-self.Gr.gw]))
             input.a_med = np.median(self.UpdVar.Area.values[i,self.Gr.gw:self.Gr.nzg-self.Gr.gw][:alen])
-            k_wmax = np.where(self.UpdVar.W.values[i,:]==np.max(self.UpdVar.W.values[i,:]))[0][0]
 
             for k in xrange(self.Gr.gw, self.Gr.nzg-self.Gr.gw):
                 input.a_kfull = interp2pt(self.UpdVar.Area.values[i,k], self.UpdVar.Area.values[i,k+1])
@@ -1614,12 +1609,7 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
                     self.b_coeff[i,k] = 0.0
                     self.asp_ratio[i,k] = 0.0
 
-                if k<0.75*k_wmax:
-                    self.nh_pressure_drag[i,k] = 0.0
-                    self.nh_pressure[i,k] = self.nh_pressure_b[i,k] + self.nh_pressure_adv[i,k] + self.nh_pressure_drag[i,k]
-
-                else:
-                    self.nh_pressure[i,k] = self.nh_pressure_b[i,k] + self.nh_pressure_adv[i,k] + self.nh_pressure_drag[i,k]
+                self.nh_pressure[i,k] = self.nh_pressure_b[i,k] + self.nh_pressure_adv[i,k] + self.nh_pressure_drag[i,k]
 
         return
 

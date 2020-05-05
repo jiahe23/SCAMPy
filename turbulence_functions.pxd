@@ -32,7 +32,9 @@ cdef struct entr_in_struct:
     double c_mu0
     double dz
     double w_upd
-    double dwdz
+    # double dwdz
+    double M
+    double dMdz
     double b_upd
     double rd
     double c_ent

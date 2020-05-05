@@ -1,4 +1,6 @@
 .DS_Store
+Dry*
+paraml*
 *.pkl
 *.pyc
 *.so

@@ -1392,10 +1392,19 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
                 if self.UpdVar.Area.values[i,k]>0.0:
                     input.b_upd = self.UpdVar.B.values[i,k]
                     input.w_upd = interp2pt(self.UpdVar.W.values[i,k],self.UpdVar.W.values[i,k-1])
-                    input.dwdz = (self.UpdVar.W.values[i,k]-self.UpdVar.W.values[i,k-1])/self.Gr.dz
                     input.z = self.Gr.z_half[k]
                     input.a_upd = self.UpdVar.Area.values[i,k]
                     input.a_env = 1.0-self.UpdVar.Area.bulkvalues[k]
+
+                    gmv_w_k = interp2pt(GMV.W.values[k], GMV.W.values[k-1])
+                    gmv_w_km = interp2pt(GMV.W.values[k-1], GMV.W.values[k-2])
+
+                    upd_w_km = interp2pt(self.UpdVar.W.values[i,k-1], self.UpdVar.W.values[i,k-2])
+                    # input.dwdz = (input.w_upd-w_km)/self.Gr.dz
+                    input.M = input.a_upd*(input.w_upd - gmv_w_k)
+                    Mm = self.UpdVar.Area.values[i,k-1]*(upd_w_km - gmv_w_km)
+                    input.dMdz = (input.M - Mm)/self.Gr.dz
+
                     input.tke = self.EnvVar.TKE.values[k]
                     input.ml = self.mixing_length[k]
                     input.qt_env = self.EnvVar.QT.values[k]

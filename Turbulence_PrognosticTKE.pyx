@@ -1404,6 +1404,7 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
                     input.M = input.a_upd*(input.w_upd - gmv_w_k)
                     Mm = self.UpdVar.Area.values[i,k-1]*(upd_w_km - gmv_w_km)
                     input.dMdz = (input.M - Mm)/self.Gr.dz
+                    input.dwdz = (input.w_upd - upd_w_km)/self.Gr.dz
 
                     input.tke = self.EnvVar.TKE.values[k]
                     input.ml = self.mixing_length[k]

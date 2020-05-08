@@ -47,8 +47,8 @@ def main():
     paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['max_area'] = 0.9
     paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['entrainment_factor'] = 0.13
     paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['detrainment_factor'] = 0.51
-    paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['entrainment_divfactor'] = 0.35
-    paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['detrainment_divfactor'] = 0.35
+    paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['entrainment_divfactor'] = 0.4
+    paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['detrainment_divfactor'] = 0.4
     paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['turbulent_entrainment_factor'] = 0.015
     paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['entrainment_ed_mf_sigma'] = 50.0
     paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['entrainment_smin_tke_coeff'] = 0.3
@@ -65,7 +65,7 @@ def main():
 
     paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['pressure_normalmode_buoy_coeff1'] = 0.12
     paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['pressure_normalmode_buoy_coeff2'] = 0.0
-    paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['pressure_normalmode_adv_coeff'] = 0.1
+    paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['pressure_normalmode_adv_coeff'] = 0.25
     paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['pressure_normalmode_drag_coeff'] = 10.0
 
     if case_name == 'Soares':

@@ -805,3 +805,57 @@ def plot_contour_t(scm_data, les_data, fixed_cbar, cb_min_t, cb_max_t, zmin, zma
         plt.savefig(folder + "contour_" + fig_name[plot_it]+".pdf")
         plt.clf()
         plt.close()
+
+
+def plot_bubble(scm_data, les_data, folder="plots/output/"):
+    """
+    Plots the time series of Bubble experiments
+    Input:
+    scm_data - scm stats file
+    les_data - les stats file
+    fixed_cbar - bool flag, True if you want to plot with specified colorbar range
+    cb_min_t - min values for colorbar
+    cb_max_t - max_values for colorbar
+    folder - folder where to save the created plot
+    """
+
+    fig = plt.figure(1)
+    fig.set_figheight(12)
+    fig.set_figwidth(16)
+    mpl.rcParams.update({'font.size': 16})
+    mpl.rc('lines', linewidth=4, markersize=10)
+
+    lab = ["area","w","buoy","press"]
+    zmin = 0.0
+    zmax = 10000.0
+
+    cmap = "RdBu_r"
+
+    tles = np.where(les_data['t']==1000)[0]
+    tscm = np.where(scm_data['t']==1000)[0]
+
+    les_var = ["updraft_area", "updraft_w", "updraft_buoyancy", "updraft_pz"]
+    scm_var = ["updraft_area", "updraft_w", "updraft_buoyancy", "nh_pressure"]
+    for it in range(3):
+        plt.subplot(2,2,it+1)
+        plt.grid(True)
+
+        plt.plot(les_data[les_var[it]][tles,:].transpose(), les_data["z_half"], '-', color='gray', label='les', lw=3)
+        plt.plot(scm_data[scm_var[it]][tscm,:].transpose(), scm_data["z_half"], "-", color="royalblue", label='scm', lw=3)
+
+        plt.xlabel(lab[it])
+        plt.ylim([zmin,zmax])
+        if it in [0,2]:
+            plt.ylabel("z [m]")
+
+    it = 3
+    plt.subplot(2,2,it+1)
+    plt.plot(scm_data["nh_pressure"][tscm,:].transpose(), scm_data["z_full"], "-", color="royalblue", label='scm', lw=3)
+    plt.plot(scm_data["nh_pressure_b"][tscm,:].transpose(), scm_data["z_full"], "--", color="b", label='scm', lw=3)
+    plt.plot(scm_data["nh_pressure_adv"][tscm,:].transpose(), scm_data["z_full"], "--", color="r", label='scm', lw=3)
+    plt.plot(scm_data["nh_pressure_drag"][tscm,:].transpose(), scm_data["z_full"], "--", color="g", label='scm', lw=3)
+    plt.legend()
+    plt.xlabel(lab[it])
+
+    plt.savefig(folder + 'DryBubble_updraft.pdf')
+    plt.clf()

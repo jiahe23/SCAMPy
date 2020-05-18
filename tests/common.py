@@ -201,3 +201,39 @@ def read_les_data_timeseries(les_data):
     data["rwp_mean"] = np.zeros_like(data["lwp_mean"]) #TODO - add rwp to les stats
 
     return data
+
+
+def read_scm_bubble(scm_data):
+    """
+    Read data from netcdf file into a dictionary that can be used for plots
+    Input:
+    scm_data  - scampy netcdf dataset with simulation results
+    """
+    variables = ["updraft_buoyancy", "updraft_area", "updraft_w", "nh_pressure", "nh_pressure_b", "nh_pressure_adv", \
+                 "nh_pressure_drag"]
+
+    data = {"z_half" : np.array(scm_data["profiles/z_half"][:]),\
+            "z_full" : np.array(scm_data["reference/z"][:]),\
+            "t" : np.array(scm_data["profiles/t"][:]),\
+            "rho_half": np.array(scm_data["reference/rho0_half"][:])}
+
+    for var in variables:
+        data[var] = []
+        data[var] = np.array(scm_data["profiles/"  + var][:, :])
+
+    return data
+
+def read_les_bubble(les_data):
+    """
+    Read data from netcdf file into a dictionary that can be used for plots
+    Input:
+    les_data - pycles netcdf dataset with specific fileds taken from LES bubble postprocessed data
+    """
+    variables = ["z_half","z_full","rho0_half","rho0_full","updraft_area","updraft_w","updraft_buoyancy","updraft_pz"]
+
+    data = {"t" : np.array(les_data.variables['t'][:]) }
+
+    for var in variables:
+        data[var] = np.array(les_data.variables[var][:])
+
+    return data

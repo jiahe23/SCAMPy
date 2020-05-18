@@ -181,11 +181,11 @@ def SP(paramlist_defaults):
 def DryBubble(paramlist_defaults):
     paramlist = copy.deepcopy(paramlist_defaults)
     paramlist['meta']['casename'] = 'DryBubble'
-    paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['surface_area'] = 0.0
+    paramlist['turbulence']['EDMF_PrognosticTKE']['surface_area'] = 0.0
 
-    paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['pressure_normalmode_buoy_coeff1'] = 0.12
-    paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['pressure_normalmode_adv_coeff'] = 0.25
-    paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['pressure_normalmode_drag_coeff'] = 0.1
+    paramlist['turbulence']['EDMF_PrognosticTKE']['pressure_normalmode_buoy_coeff1'] = 0.12
+    paramlist['turbulence']['EDMF_PrognosticTKE']['pressure_normalmode_adv_coeff'] = 0.25
+    paramlist['turbulence']['EDMF_PrognosticTKE']['pressure_normalmode_drag_coeff'] = 0.1
 
     return  paramlist
 

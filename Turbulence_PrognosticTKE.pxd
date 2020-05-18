@@ -42,6 +42,7 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
         double minimum_area
         double entrainment_factor
         double detrainment_factor
+        double entrainment_Mdiv_factor
         double entrainment_sigma
         double entrainment_smin_tke_coeff
         double entrainment_ed_mf_sigma

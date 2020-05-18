@@ -47,6 +47,7 @@ def main():
     paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['max_area'] = 0.9
     paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['entrainment_factor'] = 0.13
     paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['detrainment_factor'] = 0.51
+    paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['entrainment_massflux_div_factor'] = 0.4
     paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['turbulent_entrainment_factor'] = 0.015
     paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['entrainment_ed_mf_sigma'] = 50.0
     paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['entrainment_smin_tke_coeff'] = 0.3
@@ -180,15 +181,10 @@ def SP(paramlist_defaults):
 def DryBubble(paramlist_defaults):
     paramlist = copy.deepcopy(paramlist_defaults)
     paramlist['meta']['casename'] = 'DryBubble'
-    paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['entrainment_factor'] = 0.2
-    paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['detrainment_factor'] = 0.3
-    paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['turbulent_entrainment_factor'] = 0.01
-    paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['entrainment_sigma'] = 5.0
+    paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['surface_area'] = 0.0
 
-    paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['max_area'] = 0.5
-
-    paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['pressure_normalmode_buoy_coeff1'] = 0.1
-    paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['pressure_normalmode_adv_coeff'] = 0.5
+    paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['pressure_normalmode_buoy_coeff1'] = 0.12
+    paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['pressure_normalmode_adv_coeff'] = 0.25
     paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['pressure_normalmode_drag_coeff'] = 0.1
 
     return  paramlist

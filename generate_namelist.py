@@ -272,6 +272,8 @@ def DryBubble(namelist_defaults):
     namelist['meta']['simname'] = 'DryBubble'
     namelist['meta']['casename'] = 'DryBubble'
 
+    namelist_defaults['turbulence']['EDMF_PrognosticTKE']['entrainment'] = 'moisture_deficit_div'
+
     return namelist
 
 def write_file(namelist):

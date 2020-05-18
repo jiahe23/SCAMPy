@@ -850,12 +850,37 @@ def plot_bubble(scm_data, les_data, folder="plots/output/"):
 
     it = 3
     plt.subplot(2,2,it+1)
+    plt.grid(True)
+    plt.plot(les_data["updraft_pz"][tles,:].transpose()/10.0, les_data["z_half"], '-', color='gray', label='les', lw=3)
     plt.plot(scm_data["nh_pressure"][tscm,:].transpose(), scm_data["z_full"], "-", color="royalblue", label='scm', lw=3)
     plt.plot(scm_data["nh_pressure_b"][tscm,:].transpose(), scm_data["z_full"], "--", color="b", label='scm', lw=3)
     plt.plot(scm_data["nh_pressure_adv"][tscm,:].transpose(), scm_data["z_full"], "--", color="r", label='scm', lw=3)
     plt.plot(scm_data["nh_pressure_drag"][tscm,:].transpose(), scm_data["z_full"], "--", color="g", label='scm', lw=3)
     plt.legend()
     plt.xlabel(lab[it])
+    plt.ylim([zmin,zmax])
 
     plt.savefig(folder + 'DryBubble_updraft.pdf')
     plt.clf()
+
+    vmin = [0, 0, 0]
+    vmax = [0.35, 10.0, 0.05]
+
+    for it in range(3):
+
+        fig = plt.figure(1)
+        fig.set_figheight(12)
+        fig.set_figwidth(16)
+
+        plt.subplot(2,1,1)
+        C = plt.contourf(les_data['t'], les_data["z_half"], les_data[les_var[it]].transpose(), 20, vmin=vmin[it], vmax=vmax[it], cmap='RdBu_r')
+        plt.colorbar(C)
+        plt.title(les_var[it]+' LES')
+
+        plt.subplot(2,1,2)
+        C = plt.contourf(scm_data['t'], scm_data["z_half"], scm_data[scm_var[it]].transpose(), 20, vmin=vmin[it], vmax=vmax[it], cmap='RdBu_r')
+        plt.colorbar(C)
+        plt.title(scm_var[it]+' SCM')
+
+        plt.savefig(folder + 'DryBubble_timeseries'+les_var[it]+'.pdf')
+        plt.clf()

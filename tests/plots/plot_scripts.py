@@ -825,7 +825,7 @@ def plot_bubble(scm_data, les_data, folder="plots/output/"):
     mpl.rcParams.update({'font.size': 16})
     mpl.rc('lines', linewidth=4, markersize=10)
 
-    lab = ["area","w","buoy","press"]
+    lab = ["area","w","buoy","dpdz closure"]
     zmin = 0.0
     zmax = 10000.0
 
@@ -851,7 +851,8 @@ def plot_bubble(scm_data, les_data, folder="plots/output/"):
     it = 3
     plt.subplot(2,2,it+1)
     plt.grid(True)
-    plt.plot(les_data["updraft_pz"][tles,:].transpose()/10.0, les_data["z_half"], '-', color='gray', label='les', lw=3)
+    plt.plot(les_data["updraft_pz"][tles,:].squeeze()*les_data["updraft_area"][tles,:].squeeze()*les_data["rho0_half"],
+                        les_data["z_half"], '-', color='gray', label='les', lw=3)
     plt.plot(scm_data["nh_pressure"][tscm,:].transpose(), scm_data["z_full"], "-", color="royalblue", label='scm', lw=3)
     plt.plot(scm_data["nh_pressure_b"][tscm,:].transpose(), scm_data["z_full"], "--", color="b", label='scm', lw=3)
     plt.plot(scm_data["nh_pressure_adv"][tscm,:].transpose(), scm_data["z_full"], "--", color="r", label='scm', lw=3)

@@ -165,6 +165,7 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
         self.sorting_power = paramlist['turbulence']['EDMF_PrognosticTKE']['sorting_power']
         self.turbulent_entrainment_factor = paramlist['turbulence']['EDMF_PrognosticTKE']['turbulent_entrainment_factor']
         self.pressure_buoy_coeff = paramlist['turbulence']['EDMF_PrognosticTKE']['pressure_buoy_coeff']
+        self.pressure_drag_coeff = paramlist['turbulence']['EDMF_PrognosticTKE']['pressure_drag_coeff']
         self.aspect_ratio = paramlist['turbulence']['EDMF_PrognosticTKE']['aspect_ratio']
 
         if str(namelist['turbulence']['EDMF_PrognosticTKE']['pressure_closure_buoy']) == 'normalmode':
@@ -1441,6 +1442,7 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
                     input.b_kfull = interp2pt(self.UpdVar.B.values[i,k], self.UpdVar.B.values[i,k+1])
                     input.rho0_kfull = self.Ref.rho0[k]
                     input.bcoeff_tan18 = self.pressure_buoy_coeff
+                    input.dcoeff_tan18 = self.pressure_drag_coeff
                     input.alpha1 = self.pressure_normalmode_buoy_coeff1
                     input.alpha2 = self.pressure_normalmode_buoy_coeff2
                     input.beta1 = self.pressure_normalmode_adv_coeff

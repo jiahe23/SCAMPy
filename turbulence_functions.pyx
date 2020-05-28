@@ -343,6 +343,7 @@ cdef pressure_buoy_struct pressure_tan18_buoy(pressure_in_struct press_in) nogil
         pressure_buoy_struct _ret
 
     _ret.b_coeff = press_in.bcoeff_tan18
+
     _ret.nh_pressure_b = -1.0 * press_in.rho0_kfull * press_in.a_kfull * press_in.b_kfull * _ret.b_coeff
 
     return _ret
@@ -352,7 +353,7 @@ cdef pressure_drag_struct pressure_tan18_drag(pressure_in_struct press_in) nogil
         pressure_drag_struct _ret
 
     _ret.nh_pressure_adv = 0.0
-    _ret.nh_pressure_drag = -1.0 * press_in.rho0_kfull * sqrt(press_in.a_kfull)* sqrt(press_in.a_kfull) * (1.0/press_in.rd
+    _ret.nh_pressure_drag = -1.0 * press_in.rho0_kfull * sqrt(press_in.a_kfull) * (press_in.dcoeff_tan18 /press_in.rd
                           * (press_in.w_kfull - press_in.w_kenv)*fabs(press_in.w_kfull - press_in.w_kenv))
 
     return _ret

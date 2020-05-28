@@ -59,8 +59,10 @@ def main():
     # This constant_plume_spacing corresponds to plume_spacing/alpha_d in the Tan et al paper,
     #with values plume_spacing=500.0, alpha_d = 0.375
     paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['constant_plume_spacing'] = 1333.0
+    # paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['constant_plume_spacing'] = 500.0
     # TODO: merge the tan18 buoyancy forluma into normalmode formula -> simply set buoy_coeff1 as 1./3. and buoy_coeff2 as 0.
     paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['pressure_buoy_coeff'] = 1.0/3.0
+    paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['pressure_drag_coeff'] = 0.375
 
     paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['pressure_normalmode_buoy_coeff1'] = 0.12
     paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['pressure_normalmode_buoy_coeff2'] = 0.0
@@ -182,6 +184,8 @@ def DryBubble(paramlist_defaults):
     paramlist = copy.deepcopy(paramlist_defaults)
     paramlist['meta']['casename'] = 'DryBubble'
     paramlist['turbulence']['EDMF_PrognosticTKE']['surface_area'] = 0.0
+
+    paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['pressure_drag_coeff'] = 0.00375
 
     paramlist['turbulence']['EDMF_PrognosticTKE']['pressure_normalmode_buoy_coeff1'] = 0.12
     paramlist['turbulence']['EDMF_PrognosticTKE']['pressure_normalmode_adv_coeff'] = 0.25

@@ -185,7 +185,7 @@ def DryBubble(paramlist_defaults):
     paramlist['meta']['casename'] = 'DryBubble'
     paramlist['turbulence']['EDMF_PrognosticTKE']['surface_area'] = 0.0
 
-    paramlist_defaults['turbulence']['EDMF_PrognosticTKE']['pressure_drag_coeff'] = 0.00375
+    paramlist['turbulence']['EDMF_PrognosticTKE']['pressure_drag_coeff'] = 0.00375
 
     paramlist['turbulence']['EDMF_PrognosticTKE']['pressure_normalmode_buoy_coeff1'] = 0.12
     paramlist['turbulence']['EDMF_PrognosticTKE']['pressure_normalmode_adv_coeff'] = 0.25

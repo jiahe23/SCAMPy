@@ -77,8 +77,7 @@ cdef entr_struct entr_detr_env_moisture_deficit_b_ED_MF(entr_in_struct entr_in) 
 cdef entr_struct entr_detr_env_moisture_deficit(entr_in_struct entr_in) nogil:
     cdef:
         entr_struct _ret
-        # double moisture_deficit_e, moisture_deficit_d, c_det, mu, db, dw, logistic_e, logistic_d, ed_mf_ratio, bmix, entr_wdwdz, detr_wdwdz
-        double moisture_deficit_e, moisture_deficit_d, c_det, mu, db, dw, logistic_e, logistic_d, ed_mf_ratio, bmix, entr_MdMdz, detr_MdMdz
+        double moisture_deficit_e, moisture_deficit_d, c_det, mu, db, dw, logistic_e, logistic_d, ed_mf_ratio, bmix
         double l[2]
 
     moisture_deficit_d = (fmax((entr_in.RH_upd/100.0)**entr_in.sort_pow-(entr_in.RH_env/100.0)**entr_in.sort_pow,0.0))**(1.0/entr_in.sort_pow)
@@ -102,26 +101,15 @@ cdef entr_struct entr_detr_env_moisture_deficit(entr_in_struct entr_in) nogil:
     inv_timescale = fabs(db/dw)
     logistic_e = 1.0/(1.0+exp(-mu*db/dw*(entr_in.chi_upd - entr_in.a_upd/(entr_in.a_upd+entr_in.a_env))))
     logistic_d = 1.0/(1.0+exp( mu*db/dw*(entr_in.chi_upd - entr_in.a_upd/(entr_in.a_upd+entr_in.a_env))))
-    # entr_wdwdz = fmax( entr_in.dwdz/fmax(entr_in.w_upd,0.01),0.0)
-    # detr_wdwdz = fmax(-entr_in.dwdz/fmax(entr_in.w_upd,0.01),0.0)
-
-    entr_MdMdz = fmax( entr_in.dMdz/fmax(entr_in.M,1e-12),0.0)
-    detr_MdMdz = fmax(-entr_in.dMdz/fmax(entr_in.M,1e-12),0.0)
-
 
     #smooth min
     with gil:
         l[0] = entr_in.tke_coef*fabs(db/sqrt(entr_in.tke+1e-8))
         l[1] = fabs(db/dw)
         inv_timescale = lamb_smooth_minimum(l, 0.1, 0.0005)
-    # _ret.entr_sc = inv_timescale/dw*(entr_in.c_ent*logistic_e + c_det*moisture_deficit_e)+entr_wdwdz * entr_in.c_entdiv
-    # _ret.detr_sc = inv_timescale/dw*(entr_in.c_ent*logistic_d + c_det*moisture_deficit_d)+detr_wdwdz * entr_in.c_detdiv
 
-    _ret.entr_sc = inv_timescale/dw*(entr_in.c_ent*logistic_e + c_det*moisture_deficit_e)+entr_MdMdz * entr_in.c_entdiv
-    _ret.detr_sc = inv_timescale/dw*(entr_in.c_ent*logistic_d + c_det*moisture_deficit_d)+detr_MdMdz * entr_in.c_detdiv
-
-    # _ret.entr_sc = entr_MdMdz * entr_in.c_entdiv
-    # _ret.detr_sc = detr_MdMdz * entr_in.c_detdiv
+    _ret.entr_sc = inv_timescale/dw*(entr_in.c_ent*logistic_e + c_det*moisture_deficit_e)
+    _ret.detr_sc = inv_timescale/dw*(entr_in.c_ent*logistic_d + c_det*moisture_deficit_d)
 
     return _ret
 
@@ -153,7 +141,8 @@ cdef entr_struct entr_detr_env_moisture_deficit_div(entr_in_struct entr_in) nogi
 
     entr_MdMdz = fmax( entr_in.dMdz/fmax(entr_in.M,1e-12),0.0)
     detr_MdMdz = fmax(-entr_in.dMdz/fmax(entr_in.M,1e-12),0.0)
-
+    # entr_wdwdz = fmax( entr_in.dwdz/fmax(entr_in.w_upd,0.01),0.0)
+    # detr_wdwdz = fmax(-entr_in.dwdz/fmax(entr_in.w_upd,0.01),0.0)
 
     #smooth min
     with gil:
@@ -161,8 +150,8 @@ cdef entr_struct entr_detr_env_moisture_deficit_div(entr_in_struct entr_in) nogi
         l[1] = fabs(db/dw)
         inv_timescale = lamb_smooth_minimum(l, 0.1, 0.0005)
 
-    _ret.entr_sc = inv_timescale/dw*(entr_in.c_ent*logistic_e + c_det*moisture_deficit_e) + entr_MdMdz * entr_in.c_div
-    _ret.detr_sc = inv_timescale/dw*(entr_in.c_ent*logistic_d + c_det*moisture_deficit_d) + detr_MdMdz * entr_in.c_div
+    _ret.entr_sc = inv_timescale/dw*(entr_in.c_ent*logistic_e + c_det*moisture_deficit_e) + entr_MdMdz * entr_in.c_entdiv
+    _ret.detr_sc = inv_timescale/dw*(entr_in.c_ent*logistic_d + c_det*moisture_deficit_d) + detr_MdMdz * entr_in.c_detdiv
 
 
     return _ret

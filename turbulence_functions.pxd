@@ -80,6 +80,7 @@ cdef struct pressure_in_struct:
     double b_kfull
     double rho0_kfull
     double bcoeff_tan18
+    double dcoeff_tan18
     double alpha1
     double alpha2
     double beta1

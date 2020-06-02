@@ -80,6 +80,8 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
                 self.entr_detr_fp = entr_detr_buoyancy_sorting
             elif str(namelist['turbulence']['EDMF_PrognosticTKE']['entrainment']) == 'moisture_deficit':
                 self.entr_detr_fp = entr_detr_env_moisture_deficit
+            elif str(namelist['turbulence']['EDMF_PrognosticTKE']['entrainment']) == 'moisture_deficit_div':
+                self.entr_detr_fp = entr_detr_env_moisture_deficit_div
             elif str(namelist['turbulence']['EDMF_PrognosticTKE']['entrainment']) == 'none':
                 self.entr_detr_fp = entr_detr_none
             else:
@@ -151,6 +153,10 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
         self.surface_area = paramlist['turbulence']['EDMF_PrognosticTKE']['surface_area']
         self.max_area = paramlist['turbulence']['EDMF_PrognosticTKE']['max_area']
         self.entrainment_factor = paramlist['turbulence']['EDMF_PrognosticTKE']['entrainment_factor']
+        try:
+            self.entrainment_Mdiv_factor = paramlist['turbulence']['EDMF_PrognosticTKE']['entrainment_massflux_div_factor']
+        except:
+            self.entrainment_Mdiv_factor = 0.0
         self.updraft_mixing_frac = paramlist['turbulence']['EDMF_PrognosticTKE']['updraft_mixing_frac']
         self.entrainment_sigma = paramlist['turbulence']['EDMF_PrognosticTKE']['entrainment_sigma']
         self.entrainment_smin_tke_coeff = paramlist['turbulence']['EDMF_PrognosticTKE']['entrainment_smin_tke_coeff']
@@ -1429,6 +1435,14 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
                     input.nh_pressure = self.nh_pressure[i,k]
                     input.RH_upd = self.UpdVar.RH.values[i,k]
                     input.RH_env = self.EnvVar.RH.values[k]
+
+                    # compute dMdz at half levels
+                    gmv_w_k = interp2pt(GMV.W.values[k], GMV.W.values[k-1])
+                    gmv_w_km = interp2pt(GMV.W.values[k-1], GMV.W.values[k-2])
+                    upd_w_km = interp2pt(self.UpdVar.W.values[i,k-1], self.UpdVar.W.values[i,k-2])
+                    input.M = input.a_upd*(input.w_upd - gmv_w_k)
+                    Mm = self.UpdVar.Area.values[i,k-1]*(upd_w_km - gmv_w_km)
+                    input.dMdz = (input.M - Mm)*self.Gr.dzi
 
                     if self.calc_tke:
                             input.tke = self.EnvVar.TKE.values[k]

@@ -1441,6 +1441,11 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
                     Mm = self.UpdVar.Area.values[i,k-1]*(upd_w_km - gmv_w_km)
                     input.dMdz = (input.M - Mm)*self.Gr.dzi
 
+                    # compute dMdifdz at half level Mdif = M_upd - M_env
+                    Mdif_k = input.a_upd*input.w_upd - input.a_env*input.w_env
+                    Mdif_km = self.UpdVar.Area.values[i,k-1]*upd_w_km - (1.0-self.UpdVar.Area.bulkvalues[k-1])*interp2pt(self.EnvVar.W.values[k-1],self.EnvVar.W.values[k-2])
+                    input.dMdifdz = (Mdif_k - Mdif_km)*self.Gr.dzi
+
                     if self.calc_tke:
                             input.tke = self.EnvVar.TKE.values[k]
 

@@ -813,10 +813,6 @@ def plot_bubble(scm_data, les_data, folder="plots/output/"):
     Input:
     scm_data - scm stats file
     les_data - les stats file
-    fixed_cbar - bool flag, True if you want to plot with specified colorbar range
-    cb_min_t - min values for colorbar
-    cb_max_t - max_values for colorbar
-    folder - folder where to save the created plot
     """
 
     fig = plt.figure(1)
@@ -885,3 +881,24 @@ def plot_bubble(scm_data, les_data, folder="plots/output/"):
 
         plt.savefig(folder + 'DryBubble_timeseries'+les_var[it]+'.pdf')
         plt.clf()
+
+    '''
+    timeseries of updraft top
+    '''
+    les_top = np.zeros((les_data["t"].shape[0],1))
+    scm_top = np.zeros((scm_data["t"].shape[0],1))
+
+    for it in np.arange(les_data["t"].shape[0]):
+        les_top[it] = les_data["z_half"][np.where(les_data["updraft_area"][it,:]>1e-4)[0][-1]]
+    for it in np.arange(scm_data["t"].shape[0]):
+        scm_top[it] = scm_data["z_half"][np.where(scm_data["updraft_area"][it,:]>1e-4)[0][-1]]
+
+    fig = plt.figure(1)
+    fig.set_figheight(8)
+    fig.set_figwidth(16)
+
+    plt.plot(les_data["t"], les_top, '-', color='gray', label='les', lw=3)
+    plt.plot(scm_data["t"], scm_top, '--', color='k', label='les', lw=3)
+
+    plt.savefig(folder + 'DryBubble_timeseries_updtop.pdf')
+    plt.clf()

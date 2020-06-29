@@ -62,4 +62,6 @@ def test_plot_DryBubble(sim_data):
     scm_dict = cmn.read_scm_bubble(sim_data)
     les_dict = cmn.read_les_bubble(les_data)
 
+    scm_dict["t"] = scm_dict["t"]+0
+
     pls.plot_bubble(scm_dict, les_dict, folder=f1)

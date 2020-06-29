@@ -593,7 +593,25 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
                 self.EnvThermo.saturation_adjustment(self.EnvVar)
                 self.UpdThermo.buoyancy(self.UpdVar, self.EnvVar, GMV, self.extrapolate_buoyancy)
 
+            # for k in xrange(self.Gr.gw, self.Gr.nzg-self.Gr.gw):
+            #     if self.UpdVar.Area.values[0,k] > 1e-5:
+            #         print '\n label1'
+            #         print 'k:              ' + str(k)
+            #         print 'upd b:          ' + str(self.UpdVar.B.values[0,k])
+            #         print 'env b:          ' + str(self.EnvVar.B.values[k])
+            #         print 'grid mean b:    ' + str(self.UpdVar.Area.values[0,k]*self.UpdVar.B.values[0,k]+(1-self.UpdVar.Area.values[0,k])*self.EnvVar.B.values[k])
+            #         print 'gmv b:          ' + str(GMV.B.values[k])
             self.EnvThermo.microphysics(self.EnvVar, self.Rain, TS.dt)
+            self.UpdThermo.buoyancy(self.UpdVar, self.EnvVar, GMV, self.extrapolate_buoyancy)
+
+            # for k in xrange(self.Gr.gw, self.Gr.nzg-self.Gr.gw):
+            #     if self.UpdVar.Area.values[0,k]>1e-5:
+            #         print '\n label2'
+            #         print 'k:              ' + str(k)
+            #         print 'upd b:          ' + str(self.UpdVar.B.values[0,k])
+            #         print 'env b:          ' + str(self.EnvVar.B.values[k])
+            #         print 'gmv b:          ' + str(GMV.B.values[k])
+
             self.initialize_covariance(GMV, Case)
 
             with nogil:
@@ -681,9 +699,12 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
                 self.compute_turbulent_entrainment(GMV,Case)
             self.compute_nh_pressure()
 
-            # self.read_DryBubble_LESprofile(TS)
+            try:
+                self.read_DryBubble_LESprofile(TS)
+            except:
+                print 'No LES read at t: '+str(TS.t)
 
-            self.solve_updraft_velocity_area()
+            self.solve_updraft_velocity_area(TS)
             self.solve_updraft_scalars(GMV)
             self.UpdThermo.microphysics(self.UpdVar, self.Rain, TS.dt) # causes division error in dry bubble first time step
 
@@ -691,6 +712,7 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
             self.zero_area_fraction_cleanup(GMV)
             time_elapsed += self.dt_upd
             self.dt_upd = np.minimum(TS.dt-time_elapsed,  0.5 * self.Gr.dz/fmax(np.max(self.UpdVar.W.values),1e-10))
+
             # (####)
             # TODO - see comment (###)
             # It would be better to have a simple linear rule for updating environment here
@@ -944,7 +966,8 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
                     l2 = vkb * z_ /(sqrt(self.EnvVar.TKE.values[self.Gr.gw]/ustar/ustar)*self.tke_ed_coeff) * fmin(
                      (1.0 - 100.0 * z_/obukhov_length)**0.2, 1.0/vkb )
                 else: # neutral or stable
-                    l2 = vkb * z_ /(sqrt(self.EnvVar.TKE.values[self.Gr.gw]/ustar/ustar)*self.tke_ed_coeff)
+                    # l2 = vkb * z_ /(sqrt(self.EnvVar.TKE.values[self.Gr.gw]/ustar/ustar)*self.tke_ed_coeff)
+                    l2 = vkb * z_ /fmax(sqrt(self.EnvVar.TKE.values[self.Gr.gw]/ustar/ustar)*self.tke_ed_coeff, 1e-4)
 
                 # Buoyancy-shear-subdomain exchange-dissipation TKE equilibrium scale
                 shear2 = pow((GMV.U.values[k+1] - GMV.U.values[k-1]) * 0.5 * self.Gr.dzi, 2) + \
@@ -1686,7 +1709,7 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
 
         return
 
-    cpdef solve_updraft_velocity_area(self):
+    cpdef solve_updraft_velocity_area(self, TimeStepping TS):
         cdef:
             Py_ssize_t i, k
             Py_ssize_t gw = self.Gr.gw
@@ -1748,15 +1771,20 @@ cdef class EDMF_PrognosticTKE(ParameterizationBase):
                         exch = (self.Ref.rho0[k] * a_k * self.UpdVar.W.values[i,k]
                                 * (entr_w * self.EnvVar.W.values[k] - detr_w * self.UpdVar.W.values[i,k] ) + self.turb_entr_W[i,k])
                         buoy= self.Ref.rho0[k] * a_k * B_k
+
                         self.UpdVar.W.new[i,k] = (self.Ref.rho0[k] * a_k * self.UpdVar.W.values[i,k] * dti_
                                                   -adv + exch + buoy + self.nh_pressure[i,k])/(self.Ref.rho0[k] * anew_k * dti_)
-
                         # # prescribe pressure and buoyancy
                         # self.UpdVar.W.new[i,k] = (self.Ref.rho0[k] * a_k * self.UpdVar.W.values[i,k] * dti_
                         #                           -adv + exch + self.wbuoy[i,k] + self.wdpdz[i,k])/(self.Ref.rho0[k] * anew_k * dti_)
 
-                        # prescribe the w profiles
-                        # self.UpdVar.W.new[i,k] = self.wunew[i,k]
+                        # # prescribe the w profiles
+                        #
+                        # if TS.t >= 0:
+                        #     self.UpdVar.W.new[i,k] = (self.Ref.rho0[k] * a_k * self.UpdVar.W.values[i,k] * dti_
+                        #                               -adv + exch + buoy + self.nh_pressure[i,k])/(self.Ref.rho0[k] * anew_k * dti_)
+                        # else:
+                        #     self.UpdVar.W.new[i,k] = self.wunew[i,k]
 
                         if self.UpdVar.W.new[i,k] <= 0.0:
                             self.UpdVar.W.new[i,k] = 0.0

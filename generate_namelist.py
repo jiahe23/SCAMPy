@@ -37,7 +37,7 @@ def main():
 
     namelist_defaults['turbulence']['EDMF_PrognosticTKE'] = {}
     namelist_defaults['turbulence']['EDMF_PrognosticTKE']['updraft_number'] = 1
-    namelist_defaults['turbulence']['EDMF_PrognosticTKE']['entrainment'] = 'moisture_deficit'
+    namelist_defaults['turbulence']['EDMF_PrognosticTKE']['entrainment'] = 'moisture_deficit_div'
     namelist_defaults['turbulence']['EDMF_PrognosticTKE']['extrapolate_buoyancy'] = True
     namelist_defaults['turbulence']['EDMF_PrognosticTKE']['use_steady_updrafts'] = False
     namelist_defaults['turbulence']['EDMF_PrognosticTKE']['use_local_micro'] = True

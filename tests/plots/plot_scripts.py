@@ -861,7 +861,7 @@ def plot_bubble(scm_data, les_data, folder="plots/output/"):
     plt.clf()
 
     vmin = [0, 0, 0]
-    vmax = [0.35, 10.0, 0.05]
+    vmax = [0.5, 10.0, 0.05]
 
     for it in range(3):
 
@@ -873,11 +873,13 @@ def plot_bubble(scm_data, les_data, folder="plots/output/"):
         C = plt.contourf(les_data['t'], les_data["z_half"], les_data[les_var[it]].transpose(), 20, vmin=vmin[it], vmax=vmax[it], cmap='RdBu_r')
         plt.colorbar(C)
         plt.title(les_var[it]+' LES')
+        plt.xlim([0,1000])
 
         plt.subplot(2,1,2)
         C = plt.contourf(scm_data['t'], scm_data["z_half"], scm_data[scm_var[it]].transpose(), 20, vmin=vmin[it], vmax=vmax[it], cmap='RdBu_r')
         plt.colorbar(C)
         plt.title(scm_var[it]+' SCM')
+        plt.xlim([0,1000])
 
         plt.savefig(folder + 'DryBubble_timeseries'+les_var[it]+'.pdf')
         plt.clf()
